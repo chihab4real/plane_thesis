@@ -1,0 +1,36 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'put.plane.boarding'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    implementation 'org.springframework:spring-core:6.2.3'
+    implementation 'org.springframework:spring-context:6.2.3'
+    implementation 'org.springframework:spring-beans:6.2.3'
+    implementation 'ch.qos.logback:logback-classic:1.5.17'
+    compileOnly 'org.projectlombok:lombok:1.18.36'
+    annotationProcessor 'org.projectlombok:lombok:1.18.36'
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.18.3'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.3'
+    implementation 'com.google.guava:guava:33.4.0-jre'
+    implementation 'org.apache.commons:commons-lang3:3.17.0'
+
+
+}
+
+application {
+    mainClass = 'put.plane.boarding.PlaneBoardingApplication'
+}
+
+test {
+    useJUnitPlatform()
+}

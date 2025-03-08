@@ -1,0 +1,34 @@
+package put.plane.boarding.service.problem.factory.file;
+
+import lombok.RequiredArgsConstructor;
+import put.plane.boarding.service.agent.File;
+import put.plane.boarding.service.problem.factory.file.naming.FileNamingStrategy;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.IntStream;
+
+@RequiredArgsConstructor
+public class FileFactory {
+
+    private final FileNamingStrategy fileNamingStrategy;
+
+    public List<File> create(int numberOfFiles) {
+        var result = new ArrayList<File>();
+
+        IntStream.range(0, numberOfFiles).forEach(i -> {
+            var file = new File(fileNamingStrategy.name(i), distance(i, numberOfFiles));
+            result.add(file);
+        });
+
+        return result;
+    }
+
+    private int distance(int index, int numberOfFiles) {
+        var center = (numberOfFiles + 1) / 2;
+
+        return index >= center ?
+                index - center + 1 :
+                center - index;
+    }
+}
