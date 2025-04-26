@@ -1,13 +1,15 @@
 package put.plane.boarding.service.problem.factory.file;
 
 import lombok.RequiredArgsConstructor;
-import put.plane.boarding.service.agent.File;
+import org.springframework.stereotype.Service;
+import put.plane.boarding.service.plane.structure.File;
 import put.plane.boarding.service.problem.factory.file.naming.FileNamingStrategy;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 
+@Service
 @RequiredArgsConstructor
 public class FileFactory {
 

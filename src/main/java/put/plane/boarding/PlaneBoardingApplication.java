@@ -3,18 +3,14 @@ package put.plane.boarding;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import put.plane.boarding.service.agent.Agent;
-import put.plane.boarding.service.agent.Seat;
-import put.plane.boarding.service.agent.impl.DefaultAgent;
+import org.springframework.stereotype.Service;
 import put.plane.boarding.service.AppConfig;
 import put.plane.boarding.service.orchestrator.Orchestrator;
 import put.plane.boarding.service.orchestrator.OrchestratorRequest;
 import put.plane.boarding.service.problem.factory.DeplainingProblemFactory;
-import put.plane.boarding.service.strategy.impl.DefaultOrderStrategy;
-
-import java.util.List;
 
 @Slf4j
+@Service
 @RequiredArgsConstructor
 public class PlaneBoardingApplication {
 
@@ -29,19 +25,12 @@ public class PlaneBoardingApplication {
 
     public void run() {
 
-        var deplainingProblem = deplainingProblemFactory.create(16, 4, 4);
+        var deplainingProblem = deplainingProblemFactory.create(4, 4, 4);
 
-        deplainingProblem.getAgents().forEach(agent -> {
-            log.info("AGENT: {}", agent);
-        });
+        deplainingProblem.getPassengers().forEach(passenger -> log.info("PASSENGER: {}", passenger));
 
         var orchestrator = new Orchestrator();
-
-        var request = OrchestratorRequest.builder()
-                .problem(deplainingProblem)
-                .strategy(new DefaultOrderStrategy())
-                .build();
-
+        var request = new OrchestratorRequest(deplainingProblem);
         var result = orchestrator.orchestrate(request);
 
         log.info("RESULT: {}", result);

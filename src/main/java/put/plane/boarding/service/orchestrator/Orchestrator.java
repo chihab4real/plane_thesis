@@ -2,10 +2,13 @@ package put.plane.boarding.service.orchestrator;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import put.plane.boarding.service.agent.Agent;
+import put.plane.boarding.service.passenger.PassengerDecorator;
+import put.plane.boarding.service.problem.DeplainingProblem;
 
 import java.util.*;
 import java.util.stream.IntStream;
+
+import static put.plane.boarding.service.plane.PlaneConstants.EXIT_FROM_PLANE;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -13,51 +16,39 @@ public final class Orchestrator {
 
     public OrchestratorResponse orchestrate(OrchestratorRequest request) {
 
-        var agentsOutOfQueue = new ArrayList<>(request.getProblem().getAgents());
-        var strategy = request.getStrategy();
-        var rows = request.getProblem().getRows();
-        var agentQueue = new ArrayList<Agent>(Collections.nCopies(rows, null));
-
-        var resultList = new ArrayList<List<Agent>>();
+        var problem = request.getProblem();
+        var queue = problem.getPlaneSpecification().getQueue();
+        var passengers = problem.getPassengers();
         var resultTime = 0;
 
-        while (!agentsOutOfQueue.isEmpty() || !isAllNull(agentQueue)) {
-            agentQueue.set(0, null);
-
-            var resultIteration = new ArrayList<Agent>();
-
-            IntStream.range(0, rows).forEach(row -> {
-                var agentsFromSeats = agentsOutOfQueue
-                        .stream()
-                        .filter(agent -> agent.getSeat().row() == row)
-                        .toList();
-
-                var agentFromQueue = row + 1 == rows ? null : agentQueue.get(row + 1);
-
-                var nextToMakeStep = strategy.selectNext(agentsFromSeats, agentFromQueue);
-
-                if (nextToMakeStep != null) {
-                    if (nextToMakeStep.equals(agentFromQueue)) {
-                        agentQueue.set(row, agentFromQueue);
-                        agentQueue.set(row + 1, null);
+        while (!passengers.isEmpty()) {
+            passengers.forEach(passenger -> {
+                var nextAction = passenger.chooseAction(queue);
+                nextAction.ifPresent(action -> {
+                    passenger.setAction(action);
+                    if (action.getLocation() != queue.findPassenger(passenger)) {
+                        queue.lock(passenger, action.getLocation());
+                    }
+                });
+                if (passenger.isDuringAction()) {
+                    var action = passenger.toAction();
+                    if (action.isOver()) {
+                        passenger.onActionComplete();
+                        queue.release(passenger);
+                        if (action.getLocation() != EXIT_FROM_PLANE) {
+                            queue.take(passenger, action.getLocation());
+                        }
                     } else {
-                        agentQueue.set(row, nextToMakeStep);
-                        resultIteration.add(nextToMakeStep);
-                        agentsOutOfQueue.remove(nextToMakeStep);
+                        action.makeProgress();
                     }
                 }
             });
-
-            if (!resultIteration.isEmpty()) {
-                resultList.add(resultIteration);
-            }
-            resultTime += 1;
+            passengers = passengers.stream()
+                    .filter(PassengerDecorator::isOnPlane)
+                    .toList();
+            resultTime++;
         }
 
-        return new OrchestratorResponse(resultList, resultTime);
-    }
-
-    private boolean isAllNull(List<Agent> agents) {
-        return agents.stream().allMatch(Objects::isNull);
+        return new OrchestratorResponse(resultTime);
     }
 }

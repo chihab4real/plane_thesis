@@ -1,15 +1,17 @@
 package put.plane.boarding.service.problem;
 
+import lombok.Builder;
 import lombok.Data;
-import put.plane.boarding.service.agent.Agent;
-import put.plane.boarding.service.agent.File;
+import put.plane.boarding.service.passenger.PassengerDecorator;
+import put.plane.boarding.service.plane.PlaneSpecification;
+import put.plane.boarding.service.plane.structure.File;
 
 import java.util.List;
 
 @Data
+@Builder
 public class DeplainingProblem {
 
-    private List<Agent> agents;
-    private List<File> files;
-    private int rows;
+    private List<PassengerDecorator> passengers;
+    private PlaneSpecification planeSpecification;
 }
