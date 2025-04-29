@@ -1,2 +1,3 @@
 rootProject.name = 'plane-boarding'
+include 'simulator'
 
