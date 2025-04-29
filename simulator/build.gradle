@@ -1,5 +1,5 @@
 plugins {
-    id 'java'
+    id 'java-library'
 }
 
 group = 'put.plane.boarding'
@@ -21,7 +21,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-core:2.18.3'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.3'
     implementation 'com.google.guava:guava:33.4.0-jre'
-    implementation 'org.apache.commons:commons-lang3:3.17.0'
+    api 'org.apache.commons:commons-lang3:3.17.0'
 }
 
 test {

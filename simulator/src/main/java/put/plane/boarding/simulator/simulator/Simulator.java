@@ -1,0 +1,53 @@
+package put.plane.boarding.simulator.simulator;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import put.plane.boarding.simulator.passenger.PassengerDecorator;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static put.plane.boarding.simulator.plane.PlaneConstants.EXIT_FROM_PLANE;
+
+@Service
+@RequiredArgsConstructor
+public final class Simulator {
+
+    public SimulatorResponse simulate(SimulatorRequest request) {
+
+        var problem = request.getProblem();
+        var queue = problem.getPlane().getQueue();
+        List<PassengerDecorator> passengers = new ArrayList<>(problem.getPassengers());
+        var resultTime = 0;
+
+        while (!passengers.isEmpty()) {
+            passengers.forEach(passenger -> {
+                var nextAction = passenger.chooseAction(queue);
+                nextAction.ifPresent(action -> {
+                    passenger.setAction(action);
+                    if (action.getLocation() != queue.findPassenger(passenger)) {
+                        queue.lock(passenger, action.getLocation());
+                    }
+                });
+                if (passenger.isDuringAction()) {
+                    var action = passenger.toAction();
+                    if (action.isOver()) {
+                        passenger.onActionComplete();
+                        queue.release(passenger);
+                        if (action.getLocation() != EXIT_FROM_PLANE) {
+                            queue.take(passenger, action.getLocation());
+                        }
+                    } else {
+                        action.makeProgress();
+                    }
+                }
+            });
+            passengers = passengers.stream()
+                    .filter(PassengerDecorator::isOnPlane)
+                    .toList();
+            resultTime++;
+        }
+
+        return new SimulatorResponse(resultTime);
+    }
+}
