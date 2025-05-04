@@ -15,6 +15,7 @@ public final class Simulator {
 
     public SimulatorResponse simulate(SimulatorRequest request) {
 
+        // TODO: handle the seats further from queue - passenger will jump from window seat to queue even tho there is passenger blocking the way - Marcin
         var problem = request.getProblem();
         var queue = problem.getPlane().getQueue();
         List<PassengerDecorator> passengers = new ArrayList<>(problem.getPassengers());

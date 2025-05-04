@@ -34,7 +34,6 @@ public class DeplainingProblemFactory {
                 .files(fileFactory.create(numberOfColumns))
                 .build();
 
-        // TODO: make not random
         var passengers = new ArrayList<PassengerDecorator>();
 
         generateUniquePairs(numberOfPassengers, numberOfRows, numberOfColumns).forEach(pair -> {

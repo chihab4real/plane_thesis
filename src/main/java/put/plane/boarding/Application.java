@@ -12,11 +12,9 @@ import put.plane.boarding.simulator.problem.factory.agent.PassengerFactory;
 import put.plane.boarding.simulator.simulator.Simulator;
 import put.plane.boarding.simulator.simulator.SimulatorRequest;
 
-import java.io.Console;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
 
 import static put.plane.boarding.simulator.utils.PairUtils.generateUniquePairs;
 import java.util.ArrayList;
@@ -32,6 +30,10 @@ public class Application {
     private final PlaneFactory planeFactory;
 
     public static void main(String[] args) {
+
+        // TODO: create passenger generator - Patrick
+        // TODO: create UML diagram of work - Marcin
+        // TODO: simulator - create tests - Chichab
 
         var context = new AnnotationConfigApplicationContext(AppConfig.class);
         var application = context.getBean(Application.class);

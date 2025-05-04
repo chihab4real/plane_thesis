@@ -6,5 +6,4 @@ import put.plane.boarding.simulator.SimulatorConfig;
 
 @Configuration
 @ComponentScan("put.plane.boarding")
-public class AppConfig extends SimulatorConfig {
-}
+public class AppConfig extends SimulatorConfig {}
