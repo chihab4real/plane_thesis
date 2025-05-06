@@ -2,7 +2,7 @@ package put.plane.boarding.simulator.passenger.impl;
 
 import put.plane.boarding.simulator.passenger.PassengerDecorator;
 import put.plane.boarding.simulator.passenger.action.Action;
-import put.plane.boarding.simulator.plane.structure.Queue;
+import put.plane.boarding.simulator.plane.structure.queue.Queue;
 
 import java.util.Optional;
 
@@ -33,7 +33,7 @@ public class BaggagePassenger extends PassengerDecorator {
             return Optional.empty();
         }
         var positionInQueue = queue.findPassenger(this);
-        if (positionInQueue > 0) {
+        if (positionInQueue >= 0) {
             if (positionInQueue == baggageLocation) {
                 var result = new Action(positionInQueue, baggagePickDuration, this::onBaggagePicked);
                 return Optional.of(result);

@@ -8,7 +8,7 @@ import put.plane.boarding.simulator.passenger.PassengerDecorator;
 import put.plane.boarding.simulator.plane.Plane;
 import put.plane.boarding.simulator.plane.factory.PlaneFactory;
 import put.plane.boarding.simulator.problem.DeplainingProblem;
-import put.plane.boarding.simulator.problem.factory.agent.PassengerFactory;
+import put.plane.boarding.simulator.problem.factory.passenger.PassengerFactory;
 import put.plane.boarding.simulator.simulator.Simulator;
 import put.plane.boarding.simulator.simulator.SimulatorRequest;
 
@@ -47,7 +47,7 @@ public class Application {
         var plane = planeFactory.create(rows, columns);
 //        var initial_passengers = createPassengers(plane);
 
-        ArrayList<Integer> order = new ArrayList<Integer>(IntStream.range(0, rows * columns).boxed().toList());
+        ArrayList<Integer> order = new ArrayList<>(IntStream.range(0, rows * columns).boxed().toList());
 
         int best_time = -1;
         ArrayList<Integer> best_order = order;
@@ -68,7 +68,7 @@ public class Application {
 
         log.info("\n\nSwapping pairs");
         // Swapping pairs, only if the time is improved
-        ArrayList<Integer> last_order = new ArrayList<Integer>(IntStream.range(0, rows * columns).boxed().toList());
+        ArrayList<Integer> last_order = new ArrayList<>(IntStream.range(0, rows * columns).boxed().toList());
         int last_time = getTimeForOrder(last_order, plane);
 
         int no_change = 0;
@@ -127,11 +127,12 @@ public class Application {
     }
 
     public int getTimeForOrder(List<Integer> order, Plane plane) {
-        var curr_passengers = permute(createPassengers(plane), order);
+        var currPassengers = permute(createPassengers(plane), order);
+        plane.boardPassengers(currPassengers);
 
         var problem = DeplainingProblem.builder()
                 .plane(plane)
-                .passengers(curr_passengers)
+                .passengers(currPassengers)
                 .build();
 
         var request = new SimulatorRequest(problem);
