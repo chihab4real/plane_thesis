@@ -20,5 +20,3 @@ jobs:
               uses: gradle/actions/setup-gradle@v3
             - name: Build project
               run: ./gradlew build --info
-            - name: Run Simulator tests
-              run: ./gradlew :simulator:test --info
