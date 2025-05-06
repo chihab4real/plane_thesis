@@ -138,6 +138,6 @@ public class Application {
         var request = new SimulatorRequest(problem);
         var response = simulator.simulate(request);
 
-        return response.getTime();
+        return response.time();
     }
 }
