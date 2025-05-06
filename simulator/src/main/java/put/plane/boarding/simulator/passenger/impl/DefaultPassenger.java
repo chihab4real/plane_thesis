@@ -1,7 +1,8 @@
 package put.plane.boarding.simulator.passenger.impl;
 
+import lombok.RequiredArgsConstructor;
 import lombok.ToString;
-import put.plane.boarding.simulator.passenger.PassengerDecorator;
+import put.plane.boarding.simulator.passenger.Passenger;
 import put.plane.boarding.simulator.passenger.action.Action;
 import put.plane.boarding.simulator.plane.structure.queue.Queue;
 import put.plane.boarding.simulator.plane.structure.Seat;
@@ -12,19 +13,13 @@ import java.util.Optional;
 import static put.plane.boarding.simulator.plane.PlaneConstants.EXIT_FROM_PLANE;
 
 @ToString
-public class DefaultPassenger extends PassengerDecorator {
+@RequiredArgsConstructor
+public class DefaultPassenger implements Passenger {
 
     private Action action;
     private final Seat seat;
     private final int movingDuration;
-    private boolean hasLeftPlane;
-
-    public DefaultPassenger(Seat seat, int movingDuration) {
-        super(null);
-        this.seat = seat;
-        this.movingDuration = movingDuration;
-        this.hasLeftPlane = false;
-    }
+    private boolean hasLeftPlane = false;
 
     @Override
     public Optional<Action> chooseAction(Queue queue) {

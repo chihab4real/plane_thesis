@@ -2,7 +2,7 @@ package put.plane.boarding.simulator.plane.structure.queue;
 
 import lombok.Builder;
 import lombok.Data;
-import put.plane.boarding.simulator.passenger.PassengerDecorator;
+import put.plane.boarding.simulator.passenger.Passenger;
 
 import java.util.*;
 
@@ -11,8 +11,8 @@ import java.util.*;
 public class Queue {
 
     private final int size;
-    private final List<PassengerDecorator> queueArray;
-    private final List<PassengerDecorator> queueLocks;
+    private final List<Passenger> queueArray;
+    private final List<Passenger> queueLocks;
     private final SeatQueue seatQueue;
 
     public boolean isAvailable(int position) {
@@ -20,37 +20,37 @@ public class Queue {
                 queueArray.get(position) == null && queueLocks.get(position) == null;
     }
 
-    public boolean isPassengerInFrontOfQueue(PassengerDecorator passenger) {
+    public boolean isPassengerInFrontOfQueue(Passenger passenger) {
         return seatQueue.isPassengerInFrontOfQueue(passenger);
     }
 
-    public void onPassengerOffSeat(PassengerDecorator passenger) {
+    public void onPassengerOffSeat(Passenger passenger) {
         seatQueue.onPassengerOffSeat(passenger);
     }
 
-    public void take(PassengerDecorator passenger, int position) {
+    public void take(Passenger passenger, int position) {
         queueArray.set(position, passenger);
         queueLocks.set(position, null);
     }
 
-    public void lock(PassengerDecorator passenger, int position) {
+    public void lock(Passenger passenger, int position) {
         if (position >= 0) {
             queueLocks.set(position, passenger);
         }
     }
 
-    public void release(PassengerDecorator passenger) {
+    public void release(Passenger passenger) {
         var position = findPassenger(passenger);
         if (position >= 0) {
             queueArray.set(position, null);
         }
     }
 
-    public int findPassenger(PassengerDecorator passenger) {
+    public int findPassenger(Passenger passenger) {
         return queueArray.indexOf(passenger);
     }
 
-    public int stepTo(PassengerDecorator passenger, int targetLocation) {
+    public int stepTo(Passenger passenger, int targetLocation) {
         var passengerLocation = findPassenger(passenger);
         return passengerLocation == targetLocation ?
             passengerLocation : passengerLocation > targetLocation ?
@@ -59,7 +59,7 @@ public class Queue {
 
     }
 
-    public void boardPassengers(List<PassengerDecorator> passengers) {
+    public void boardPassengers(List<Passenger> passengers) {
         seatQueue.boardPassengers(passengers);
     }
 }

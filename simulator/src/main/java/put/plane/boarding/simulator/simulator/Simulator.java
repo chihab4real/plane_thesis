@@ -2,7 +2,7 @@ package put.plane.boarding.simulator.simulator;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import put.plane.boarding.simulator.passenger.PassengerDecorator;
+import put.plane.boarding.simulator.passenger.Passenger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +18,7 @@ public final class Simulator {
         // TODO: handle the seats further from queue - passenger will jump from window seat to queue even tho there is passenger blocking the way - Marcin
         var problem = request.getProblem();
         var queue = problem.getPlane().getQueue();
-        List<PassengerDecorator> passengers = new ArrayList<>(problem.getPassengers());
+        List<Passenger> passengers = new ArrayList<>(problem.getPassengers());
         var resultTime = 0;
 
         while (!passengers.isEmpty()) {
@@ -44,7 +44,7 @@ public final class Simulator {
                 }
             });
             passengers = passengers.stream()
-                    .filter(PassengerDecorator::isOnPlane)
+                    .filter(Passenger::isOnPlane)
                     .toList();
             resultTime++;
         }

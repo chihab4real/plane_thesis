@@ -1,11 +1,11 @@
 package put.plane.boarding.simulator.passenger;
 
-import put.plane.boarding.simulator.passenger.impl.BaggagePassenger;
+import put.plane.boarding.simulator.passenger.impl.decorator.BaggagePassenger;
 import put.plane.boarding.simulator.passenger.impl.DefaultPassenger;
 
 public class PassengerBuilder {
 
-    private PassengerDecorator passenger;
+    private Passenger passenger;
 
     public PassengerBuilder(DefaultPassenger defaultPassenger) {
         this.passenger = defaultPassenger;
@@ -16,7 +16,7 @@ public class PassengerBuilder {
         return this;
     }
 
-    public PassengerDecorator build() {
+    public Passenger build() {
         return passenger;
     }
 }

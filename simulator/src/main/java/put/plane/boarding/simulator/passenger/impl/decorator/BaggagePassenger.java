@@ -1,6 +1,6 @@
-package put.plane.boarding.simulator.passenger.impl;
+package put.plane.boarding.simulator.passenger.impl.decorator;
 
-import put.plane.boarding.simulator.passenger.PassengerDecorator;
+import put.plane.boarding.simulator.passenger.Passenger;
 import put.plane.boarding.simulator.passenger.action.Action;
 import put.plane.boarding.simulator.plane.structure.queue.Queue;
 
@@ -14,7 +14,7 @@ public class BaggagePassenger extends PassengerDecorator {
     private final int baggagePickDuration;
     private boolean hasBaggage;
 
-    public BaggagePassenger(PassengerDecorator passenger, int baggageLocation, int baggagePickDuration) {
+    public BaggagePassenger(Passenger passenger, int baggageLocation, int baggagePickDuration) {
         super(passenger);
         this.baggageLocation = baggageLocation;
         this.baggagePickDuration = baggagePickDuration;

@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.stereotype.Service;
-import put.plane.boarding.simulator.passenger.PassengerDecorator;
+import put.plane.boarding.simulator.passenger.Passenger;
 import put.plane.boarding.simulator.plane.Plane;
 import put.plane.boarding.simulator.plane.factory.PlaneFactory;
 import put.plane.boarding.simulator.problem.DeplainingProblem;
@@ -14,10 +14,12 @@ import put.plane.boarding.simulator.simulator.SimulatorRequest;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static put.plane.boarding.simulator.utils.PairUtils.generateUniquePairs;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Slf4j
@@ -28,6 +30,7 @@ public class Application {
     private final Simulator simulator;
     private final PassengerFactory passengerFactory;
     private final PlaneFactory planeFactory;
+    private final Random random;
 
     public static void main(String[] args) {
 
@@ -45,47 +48,48 @@ public class Application {
         int rows = 16;
         int columns = 6;
         var plane = planeFactory.create(rows, columns);
-//        var initial_passengers = createPassengers(plane);
 
-        ArrayList<Integer> order = new ArrayList<>(IntStream.range(0, rows * columns).boxed().toList());
+        int numberOfPassengers = rows * columns;
+
+        List<Integer> order = IntStream.range(0, numberOfPassengers).boxed().collect(Collectors.toList());
 
         int best_time = -1;
-        ArrayList<Integer> best_order = order;
+        List<Integer> best_order = new ArrayList<>(order);
 
         // Checking random combinations
-        for (int i = 0; i < 100000; i++) {
+        for (int i = 0; i < 100_000; i++) {
             Collections.shuffle(order);
 
             int time = getTimeForOrder(order, plane);
 
             if (time < best_time || best_time < 0) {
                 best_time = time;
-                best_order = order;
+                Collections.copy(best_order, order);
 
-                log.info("TIME({}): {}\nORDER: {}", i, time, order);
+                log.info("TIME({}): {}\nORDER: {}", i, best_time, best_order);
             }
         }
 
         log.info("\n\nSwapping pairs");
         // Swapping pairs, only if the time is improved
-        ArrayList<Integer> last_order = new ArrayList<>(IntStream.range(0, rows * columns).boxed().toList());
+        List<Integer> last_order = IntStream.range(0, rows * columns).boxed().collect(Collectors.toList());
         int last_time = getTimeForOrder(last_order, plane);
 
         int no_change = 0;
 
-        for (int i = 0; i < 100000; i++) {
+        for (int i = 0; i < 100_000; i++) {
             order = swapTwoRand(last_order);
             int time = getTimeForOrder(order, plane);
 
             if (time < last_time) {
-                last_order = order;
+                Collections.copy(last_order, order);
                 last_time = time;
                 log.info("TIME({}): {}\nORDER: {}", i, last_time, last_order);
             }
             else {
                 no_change++;
 
-                if (no_change >= 10000) {
+                if (no_change >= 10_000) {
                     no_change = 0;
 
                     Collections.shuffle(last_order);
@@ -96,7 +100,7 @@ public class Application {
         }
     }
 
-    public List<PassengerDecorator> createPassengers(Plane plane) {
+    public List<Passenger> createPassengers(Plane plane) {
 
         // Random passengers - example
         var seats = generateUniquePairs(plane.getRows() * plane.getColumns(), plane.getRows(), plane.getColumns());
@@ -116,10 +120,13 @@ public class Application {
         return result;
     }
 
-    public static ArrayList<Integer> swapTwoRand(List<Integer> original) {
-        int[] to_swap = ThreadLocalRandom.current().ints(0, original.size()).limit(2).toArray();
+    public List<Integer> swapTwoRand(List<Integer> original) {
+        int[] to_swap = random
+                .ints(0, original.size())
+                .limit(2)
+                .toArray();
 
-        ArrayList<Integer> result = new ArrayList<>(original);
+        List<Integer> result = new ArrayList<>(original);
         result.set(to_swap[0], original.get(to_swap[1]));
         result.set(to_swap[1], original.get(to_swap[0]));
 
