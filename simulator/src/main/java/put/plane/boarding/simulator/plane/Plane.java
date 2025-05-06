@@ -2,7 +2,7 @@ package put.plane.boarding.simulator.plane;
 
 import lombok.Builder;
 import lombok.Data;
-import put.plane.boarding.simulator.passenger.PassengerDecorator;
+import put.plane.boarding.simulator.passenger.Passenger;
 import put.plane.boarding.simulator.plane.structure.File;
 import put.plane.boarding.simulator.plane.structure.queue.Queue;
 
@@ -20,7 +20,7 @@ public class Plane {
         return files.size();
     }
 
-    public void boardPassengers(List<PassengerDecorator> passengers) {
+    public void boardPassengers(List<Passenger> passengers) {
         queue.boardPassengers(passengers);
     }
 }

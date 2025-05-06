@@ -1,6 +1,6 @@
 package put.plane.boarding.simulator.plane.structure.queue.factory;
 
-import put.plane.boarding.simulator.passenger.PassengerDecorator;
+import put.plane.boarding.simulator.passenger.impl.decorator.PassengerDecorator;
 import put.plane.boarding.simulator.plane.structure.queue.Queue;
 import put.plane.boarding.simulator.plane.structure.queue.SeatQueue;
 
