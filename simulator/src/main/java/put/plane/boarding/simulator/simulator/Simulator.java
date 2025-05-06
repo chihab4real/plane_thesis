@@ -49,6 +49,8 @@ public final class Simulator {
             resultTime++;
         }
 
-        return new SimulatorResponse(resultTime);
+        return SimulatorResponse.builder()
+                .time(resultTime)
+                .build();
     }
 }

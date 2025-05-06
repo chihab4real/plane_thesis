@@ -1,33 +1,31 @@
-package put.plane.boarding.simulator.plane.structure;
+package put.plane.boarding.simulator.plane.structure.queue;
 
+import lombok.Builder;
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 import put.plane.boarding.simulator.passenger.PassengerDecorator;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
-@Slf4j
 @Data
+@Builder
 public class Queue {
 
     private final int size;
-    private List<PassengerDecorator> queueArray;
-    private List<PassengerDecorator> queueLocks;
-
-    public Queue(int size) {
-        this.size = size;
-        var list = Arrays
-                .stream(new PassengerDecorator[size])
-                .toList();
-        this.queueArray = new ArrayList<>(list);
-        this.queueLocks = new ArrayList<>(list);
-    }
+    private final List<PassengerDecorator> queueArray;
+    private final List<PassengerDecorator> queueLocks;
+    private final SeatQueue seatQueue;
 
     public boolean isAvailable(int position) {
         return position < 0 ||
                 queueArray.get(position) == null && queueLocks.get(position) == null;
+    }
+
+    public boolean isPassengerInFrontOfQueue(PassengerDecorator passenger) {
+        return seatQueue.isPassengerInFrontOfQueue(passenger);
+    }
+
+    public void onPassengerOffSeat(PassengerDecorator passenger) {
+        seatQueue.onPassengerOffSeat(passenger);
     }
 
     public void take(PassengerDecorator passenger, int position) {
@@ -59,5 +57,9 @@ public class Queue {
                 passengerLocation - 1 :
                 passengerLocation + 1;
 
+    }
+
+    public void boardPassengers(List<PassengerDecorator> passengers) {
+        seatQueue.boardPassengers(passengers);
     }
 }

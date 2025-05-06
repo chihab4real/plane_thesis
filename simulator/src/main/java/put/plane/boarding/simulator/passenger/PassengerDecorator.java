@@ -2,7 +2,7 @@ package put.plane.boarding.simulator.passenger;
 
 import lombok.RequiredArgsConstructor;
 import put.plane.boarding.simulator.passenger.action.Action;
-import put.plane.boarding.simulator.plane.structure.Queue;
+import put.plane.boarding.simulator.plane.structure.queue.Queue;
 import put.plane.boarding.simulator.plane.structure.Seat;
 
 import java.util.Optional;

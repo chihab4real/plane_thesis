@@ -3,7 +3,7 @@ package put.plane.boarding.simulator.passenger.impl;
 import lombok.ToString;
 import put.plane.boarding.simulator.passenger.PassengerDecorator;
 import put.plane.boarding.simulator.passenger.action.Action;
-import put.plane.boarding.simulator.plane.structure.Queue;
+import put.plane.boarding.simulator.plane.structure.queue.Queue;
 import put.plane.boarding.simulator.plane.structure.Seat;
 
 import java.util.Objects;
@@ -32,8 +32,10 @@ public class DefaultPassenger extends PassengerDecorator {
         var isInQueue = positionInQueue >= 0;
 
         if (!isInQueue) {
-            if (queue.isAvailable(seat.row())) {
-                var result = new Action(seat.row(), movingDuration);
+            if (queue.isAvailable(seat.row()) && queue.isPassengerInFrontOfQueue(this)) {
+                var result = new Action(seat.row(), movingDuration, () -> {
+                    queue.onPassengerOffSeat(this);
+                });
                 return Optional.of(result);
             }
             return Optional.empty();

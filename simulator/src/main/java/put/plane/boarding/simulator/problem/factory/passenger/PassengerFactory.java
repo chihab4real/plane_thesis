@@ -1,4 +1,4 @@
-package put.plane.boarding.simulator.problem.factory.agent;
+package put.plane.boarding.simulator.problem.factory.passenger;
 
 import org.springframework.stereotype.Service;
 import put.plane.boarding.simulator.passenger.PassengerBuilder;
