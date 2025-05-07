@@ -1,6 +1,7 @@
 package put.plane.boarding.simulator.passenger;
 
 import put.plane.boarding.simulator.passenger.action.Action;
+import put.plane.boarding.simulator.plane.Plane;
 import put.plane.boarding.simulator.plane.structure.Seat;
 import put.plane.boarding.simulator.plane.structure.queue.Queue;
 
@@ -14,7 +15,7 @@ public interface Passenger {
     void setAction(Action action);
     void onLeavePlane();
     boolean isOnPlane();
-    Optional<Action> chooseAction(Queue queue);
+    Optional<Action> chooseAction(Plane plane);
 
     default boolean isDuringAction() {
         var action = toAction();

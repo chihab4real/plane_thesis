@@ -2,7 +2,6 @@ package put.plane.boarding.simulator.plane.structure.queue.factory;
 
 import put.plane.boarding.simulator.passenger.impl.decorator.PassengerDecorator;
 import put.plane.boarding.simulator.plane.structure.queue.Queue;
-import put.plane.boarding.simulator.plane.structure.queue.SeatQueue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,7 +16,6 @@ public class QueueFactory {
                 .size(size)
                 .queueArray(new ArrayList<>(queueList))
                 .queueLocks(new ArrayList<>(queueList))
-                .seatQueue(new SeatQueue())
                 .build();
     }
 }

@@ -15,28 +15,28 @@ public final class Simulator {
 
     public SimulatorResponse simulate(SimulatorRequest request) {
 
-        // TODO: handle the seats further from queue - passenger will jump from window seat to queue even tho there is passenger blocking the way - Marcin
         var problem = request.getProblem();
-        var queue = problem.getPlane().getQueue();
+        var plane = problem.getPlane();
+        var queue = plane.getQueue();
         List<Passenger> passengers = new ArrayList<>(problem.getPassengers());
         var resultTime = 0;
 
         while (!passengers.isEmpty()) {
             passengers.forEach(passenger -> {
-                var nextAction = passenger.chooseAction(queue);
+                var nextAction = passenger.chooseAction(plane);
                 nextAction.ifPresent(action -> {
                     passenger.setAction(action);
                     if (action.getLocation() != queue.findPassenger(passenger)) {
-                        queue.lock(passenger, action.getLocation());
+                        queue.lockSpot(passenger, action.getLocation());
                     }
                 });
                 if (passenger.isDuringAction()) {
                     var action = passenger.toAction();
                     if (action.isOver()) {
                         passenger.onActionComplete();
-                        queue.release(passenger);
+                        queue.releaseSpot(passenger);
                         if (action.getLocation() != EXIT_FROM_PLANE) {
-                            queue.take(passenger, action.getLocation());
+                            queue.takeSpot(passenger, action.getLocation());
                         }
                     } else {
                         action.makeProgress();

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import put.plane.boarding.simulator.passenger.Passenger;
 import put.plane.boarding.simulator.passenger.action.Action;
+import put.plane.boarding.simulator.plane.Plane;
 import put.plane.boarding.simulator.plane.structure.queue.Queue;
 import put.plane.boarding.simulator.plane.structure.Seat;
 
@@ -22,22 +23,24 @@ public class DefaultPassenger implements Passenger {
     private boolean hasLeftPlane = false;
 
     @Override
-    public Optional<Action> chooseAction(Queue queue) {
+    public Optional<Action> chooseAction(Plane plane) {
+        var queue = plane.getQueue();
+        var passengersOnSeats = plane.getPassengersOnSeats();
         var positionInQueue = queue.findPassenger(this);
         var isInQueue = positionInQueue >= 0;
 
         if (!isInQueue) {
-            if (queue.isAvailable(seat.row()) && queue.isPassengerInFrontOfQueue(this)) {
+            if (queue.isSpotAvailable(seat.row()) && passengersOnSeats.isPassengerInFrontSeat(this)) {
                 var result = new Action(seat.row(), movingDuration, () -> {
-                    queue.onPassengerOffSeat(this);
+                    passengersOnSeats.onPassengerOffSeat(this);
                 });
                 return Optional.of(result);
             }
             return Optional.empty();
         }
 
-        var nextStep = queue.stepTo(this, EXIT_FROM_PLANE);
-        if (queue.isAvailable(nextStep)) {
+        var nextStep = queue.stepInDirection(this, EXIT_FROM_PLANE);
+        if (queue.isSpotAvailable(nextStep)) {
             var result = new Action(nextStep, movingDuration, () -> {
                 if (nextStep == EXIT_FROM_PLANE) {
                     onLeavePlane();
