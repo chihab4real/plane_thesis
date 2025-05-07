@@ -3,6 +3,7 @@ package put.plane.boarding.simulator.plane.factory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import put.plane.boarding.simulator.plane.Plane;
+import put.plane.boarding.simulator.plane.structure.queue.PassengersOnSeats;
 import put.plane.boarding.simulator.plane.structure.queue.factory.QueueFactory;
 import put.plane.boarding.simulator.problem.factory.file.FileFactory;
 
@@ -17,6 +18,7 @@ public class PlaneFactory {
         return Plane.builder()
                 .rows(numberOfRows)
                 .queue(QueueFactory.create(numberOfRows))
+                .passengersOnSeats(new PassengersOnSeats())
                 .files(fileFactory.create(numberOfColumns))
                 .build();
 

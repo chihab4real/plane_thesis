@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class SeatQueue {
+public class PassengersOnSeats {
     private Map<Integer, Set<Passenger>> passengersOnSeatsByRows;
 
     public void boardPassengers(List<Passenger> passengers) {
@@ -24,7 +24,7 @@ public class SeatQueue {
                 .remove(passenger);
     }
 
-    public boolean isPassengerInFrontOfQueue(Passenger passenger) {
+    public boolean isPassengerInFrontSeat(Passenger passenger) {
         var passengersInFront = passengersOnSeatsByRows.get(passenger.toSeat().row())
                 .stream()
                 .filter(p -> p.toSeat().file().distance() < passenger.toSeat().file().distance())
