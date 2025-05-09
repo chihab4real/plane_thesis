@@ -9,6 +9,7 @@ import put.plane.boarding.simulator.SimulatorConfig;
 import put.plane.boarding.simulator.plane.factory.PlaneFactory;
 import put.plane.boarding.simulator.problem.DeplainingProblem;
 import put.plane.boarding.simulator.problem.factory.passenger.PassengerFactory;
+import put.plane.boarding.simulator.simulator.factory.TestPassengerFactory;
 
 import java.util.List;
 
@@ -25,7 +26,7 @@ public class SimulatorTest {
     private PlaneFactory planeFactory;
 
     @Autowired
-    private PassengerFactory passengerFactory;
+    private TestPassengerFactory passengerFactory;
 
     @Test
     public void smallNonCollisionSetup() {
@@ -33,10 +34,10 @@ public class SimulatorTest {
         int cols = 4;
         var plane = planeFactory.create(rows, cols);
 
-        var passenger1 = passengerFactory.create(plane, 0, 0);
-        var passenger2 = passengerFactory.create(plane, 1, 0);
-
-        var passengers = List.of(passenger1, passenger2);
+        var passengers = List.of(
+                passengerFactory.create(plane, 0, 0, 1),
+                passengerFactory.create(plane, 1, 0, 1)
+        );
         plane.boardPassengers(passengers);
 
         var deplainingProblem = DeplainingProblem.builder()
@@ -54,10 +55,10 @@ public class SimulatorTest {
         int cols = 4;
         var plane = planeFactory.create(rows, cols);
 
-        var passenger1 = passengerFactory.create(plane, 0, 0);
-        var passenger2 = passengerFactory.create(plane, 0, 1);
-
-        var passengers = List.of(passenger1, passenger2);
+        var passengers = List.of(
+                passengerFactory.create(plane, 0, 0, 2),
+                passengerFactory.create(plane, 0, 1, 2)
+        );
         plane.boardPassengers(passengers);
 
         var deplainingProblem = DeplainingProblem.builder()
@@ -66,6 +67,33 @@ public class SimulatorTest {
                 .build();
         var simulatorRequest = new SimulatorRequest(deplainingProblem);
         var simulatorResponse = simulator.simulate(simulatorRequest);
-        assertEquals(4, simulatorResponse.time());
+        assertEquals(7, simulatorResponse.time());
+    }
+
+    @Test
+    public void bigCollisionSetup() {
+        int rows = 5;
+        int cols = 4;
+        var plane = planeFactory.create(rows, cols);
+
+        var passengers = List.of(
+                passengerFactory.create(plane, 0, 1, 1),
+                passengerFactory.create(plane, 0, 2, 2),
+                passengerFactory.create(plane, 1, 1, 1),
+                passengerFactory.create(plane, 1, 2, 2),
+                passengerFactory.create(plane, 2, 1, 1),
+                passengerFactory.create(plane, 3, 1, 1),
+                passengerFactory.create(plane, 3, 2, 2),
+                passengerFactory.create(plane, 2, 2, 2)
+        );
+        plane.boardPassengers(passengers);
+
+        var deplainingProblem = DeplainingProblem.builder()
+                .plane(plane)
+                .passengers(passengers)
+                .build();
+        var simulatorRequest = new SimulatorRequest(deplainingProblem);
+        var simulatorResponse = simulator.simulate(simulatorRequest);
+        assertEquals(20, simulatorResponse.time());
     }
 }
