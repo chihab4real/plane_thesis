@@ -5,7 +5,6 @@ import lombok.ToString;
 import put.plane.boarding.simulator.passenger.Passenger;
 import put.plane.boarding.simulator.passenger.action.Action;
 import put.plane.boarding.simulator.plane.Plane;
-import put.plane.boarding.simulator.plane.structure.queue.Queue;
 import put.plane.boarding.simulator.plane.structure.Seat;
 
 import java.util.Objects;
@@ -20,6 +19,7 @@ public class DefaultPassenger implements Passenger {
     private Action action;
     private final Seat seat;
     private final int movingDuration;
+    private final int enteringDuration;
     private boolean hasLeftPlane = false;
 
     @Override
@@ -31,7 +31,7 @@ public class DefaultPassenger implements Passenger {
 
         if (!isInQueue) {
             if (queue.isSpotAvailable(seat.row()) && passengersOnSeats.isPassengerInFrontSeat(this)) {
-                var result = new Action(seat.row(), movingDuration, () -> {
+                var result = new Action(seat.row(), enteringDuration, () -> {
                     passengersOnSeats.onPassengerOffSeat(this);
                 });
                 return Optional.of(result);

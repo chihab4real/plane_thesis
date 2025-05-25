@@ -1,5 +1,6 @@
 package put.plane.boarding.simulator.plane.structure.queue;
 
+import lombok.ToString;
 import put.plane.boarding.simulator.passenger.Passenger;
 
 import java.util.List;
@@ -7,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@ToString
 public class PassengersOnSeats {
     private Map<Integer, Set<Passenger>> passengersOnSeatsByRows;
 

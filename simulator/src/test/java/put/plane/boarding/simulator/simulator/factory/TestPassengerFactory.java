@@ -10,11 +10,11 @@ import put.plane.boarding.simulator.plane.structure.Seat;
 @Service
 public class TestPassengerFactory {
 
-    public Passenger create(Plane plane, int row, int column, int passengerSpeed) {
+    public Passenger create(Plane plane, int row, int column, int passengerSpeed, int queueEnteringSpeed) {
 
         var seat = new Seat(row, plane.getFiles().get(column));
 
-        var defaultPassenger = new DefaultPassenger(seat, passengerSpeed);
+        var defaultPassenger = new DefaultPassenger(seat, passengerSpeed, queueEnteringSpeed);
         return new PassengerBuilder(defaultPassenger)
                 .build();
     }

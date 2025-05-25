@@ -15,7 +15,7 @@ public class PassengerFactory {
 
         var seat = new Seat(row, plane.getFiles().get(column));
 
-        var defaultPassenger = new DefaultPassenger(seat, 1);
+        var defaultPassenger = new DefaultPassenger(seat, 1, 2);
         return new PassengerBuilder(defaultPassenger)
                 .build();
     }

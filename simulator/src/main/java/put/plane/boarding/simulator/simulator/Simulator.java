@@ -8,7 +8,6 @@ import put.plane.boarding.simulator.plane.structure.queue.Queue;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static put.plane.boarding.simulator.plane.PlaneConstants.EXIT_FROM_PLANE;
 
@@ -25,27 +24,14 @@ public final class Simulator {
         var resultTime = 0;
 
         while (!passengers.isEmpty()) {
-            var someCustomerHasMadeAction = new AtomicBoolean(true);
-            List<Passenger> passengersNotMoved = new ArrayList<>(passengers);
-            while (someCustomerHasMadeAction.get()) {
-                someCustomerHasMadeAction.set(false);
-                var passengersWhoMoved = new ArrayList<Passenger>();
-                passengersNotMoved.forEach(passenger -> {
-                    if (!passenger.isDuringAction()) {
-                        possiblyCreatePassengerAction(plane, queue, passenger);
-                    }
-                    if (passenger.isDuringAction()) {
-                        passengersWhoMoved.add(passenger);
-                        someCustomerHasMadeAction.set(true);
-                        doPassengerAction(passenger, queue);
-                    }
-                });
-                passengersNotMoved = passengersNotMoved.stream()
-                        .filter(passenger -> !passengersWhoMoved.contains(passenger))
-                        .toList();
-            }
-
-
+            passengers.forEach(passenger -> {
+                if (!passenger.isDuringAction()) {
+                    chooseNextAction(passenger, plane, queue);
+                }
+                if (passenger.isDuringAction()) {
+                    executePassengerAction(passenger, queue);
+                }
+            });
             passengers = passengers.stream()
                     .filter(Passenger::isOnPlane)
                     .toList();
@@ -57,7 +43,7 @@ public final class Simulator {
                 .build();
     }
 
-    private void doPassengerAction(Passenger passenger, Queue queue) {
+    private void executePassengerAction(Passenger passenger, Queue queue) {
         var action = passenger.toAction();
         if (action.isOver()) {
             passenger.onActionComplete();
@@ -70,7 +56,7 @@ public final class Simulator {
         }
     }
 
-    private void possiblyCreatePassengerAction(Plane plane, Queue queue, Passenger passenger) {
+    private void chooseNextAction(Passenger passenger, Plane plane, Queue queue) {
         var nextAction = passenger.chooseAction(plane);
         nextAction.ifPresent(action -> {
             passenger.setAction(action);
