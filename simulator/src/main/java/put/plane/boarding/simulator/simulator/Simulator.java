@@ -3,13 +3,11 @@ package put.plane.boarding.simulator.simulator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import put.plane.boarding.simulator.passenger.Passenger;
-import put.plane.boarding.simulator.passenger.action.Action;
 import put.plane.boarding.simulator.plane.Plane;
 import put.plane.boarding.simulator.plane.structure.queue.Queue;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import static put.plane.boarding.simulator.plane.PlaneConstants.EXIT_FROM_PLANE;
 
