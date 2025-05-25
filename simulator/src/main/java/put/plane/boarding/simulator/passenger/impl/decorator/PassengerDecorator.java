@@ -1,14 +1,14 @@
 package put.plane.boarding.simulator.passenger.impl.decorator;
 
 import lombok.RequiredArgsConstructor;
-import put.plane.boarding.simulator.passenger.Passenger;
+import put.plane.boarding.simulator.passenger.SimulatorPassenger;
 import put.plane.boarding.simulator.passenger.action.Action;
 import put.plane.boarding.simulator.plane.structure.Seat;
 
 @RequiredArgsConstructor
-public abstract class PassengerDecorator implements Passenger {
+public abstract class PassengerDecorator implements SimulatorPassenger {
 
-    protected final Passenger passenger;
+    protected final SimulatorPassenger passenger;
 
     @Override
     public Seat toSeat() {

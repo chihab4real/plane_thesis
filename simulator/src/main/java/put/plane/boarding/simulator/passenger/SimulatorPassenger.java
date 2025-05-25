@@ -3,11 +3,10 @@ package put.plane.boarding.simulator.passenger;
 import put.plane.boarding.simulator.passenger.action.Action;
 import put.plane.boarding.simulator.plane.Plane;
 import put.plane.boarding.simulator.plane.structure.Seat;
-import put.plane.boarding.simulator.plane.structure.queue.Queue;
 
 import java.util.Optional;
 
-public interface Passenger {
+public interface SimulatorPassenger {
 
     Seat toSeat();
     int toMovingDuration();

@@ -2,7 +2,7 @@ package put.plane.boarding.simulator.simulator;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import put.plane.boarding.simulator.passenger.Passenger;
+import put.plane.boarding.simulator.passenger.SimulatorPassenger;
 import put.plane.boarding.simulator.plane.Plane;
 import put.plane.boarding.simulator.plane.structure.queue.Queue;
 
@@ -20,7 +20,7 @@ public final class Simulator {
         var problem = request.getProblem();
         var plane = problem.getPlane();
         var queue = plane.getQueue();
-        List<Passenger> passengers = new ArrayList<>(problem.getPassengers());
+        List<SimulatorPassenger> passengers = new ArrayList<>(problem.getPassengers());
         var resultTime = 0;
 
         while (!passengers.isEmpty()) {
@@ -33,7 +33,7 @@ public final class Simulator {
                 }
             });
             passengers = passengers.stream()
-                    .filter(Passenger::isOnPlane)
+                    .filter(SimulatorPassenger::isOnPlane)
                     .toList();
             resultTime++;
         }
@@ -43,7 +43,7 @@ public final class Simulator {
                 .build();
     }
 
-    private void executePassengerAction(Passenger passenger, Queue queue) {
+    private void executePassengerAction(SimulatorPassenger passenger, Queue queue) {
         var action = passenger.toAction();
         if (action.isOver()) {
             passenger.onActionComplete();
@@ -56,7 +56,7 @@ public final class Simulator {
         }
     }
 
-    private void chooseNextAction(Passenger passenger, Plane plane, Queue queue) {
+    private void chooseNextAction(SimulatorPassenger passenger, Plane plane, Queue queue) {
         var nextAction = passenger.chooseAction(plane);
         nextAction.ifPresent(action -> {
             passenger.setAction(action);

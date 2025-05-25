@@ -2,7 +2,7 @@ package put.plane.boarding.simulator.passenger.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
-import put.plane.boarding.simulator.passenger.Passenger;
+import put.plane.boarding.simulator.passenger.SimulatorPassenger;
 import put.plane.boarding.simulator.passenger.action.Action;
 import put.plane.boarding.simulator.plane.Plane;
 import put.plane.boarding.simulator.plane.structure.Seat;
@@ -14,7 +14,7 @@ import static put.plane.boarding.simulator.plane.PlaneConstants.EXIT_FROM_PLANE;
 
 @ToString
 @RequiredArgsConstructor
-public class DefaultPassenger implements Passenger {
+public class DefaultPassenger implements SimulatorPassenger {
 
     private Action action;
     private final Seat seat;

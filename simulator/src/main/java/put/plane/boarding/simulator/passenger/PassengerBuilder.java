@@ -5,7 +5,7 @@ import put.plane.boarding.simulator.passenger.impl.DefaultPassenger;
 
 public class PassengerBuilder {
 
-    private Passenger passenger;
+    private SimulatorPassenger passenger;
 
     public PassengerBuilder(DefaultPassenger defaultPassenger) {
         this.passenger = defaultPassenger;
@@ -16,7 +16,7 @@ public class PassengerBuilder {
         return this;
     }
 
-    public Passenger build() {
+    public SimulatorPassenger build() {
         return passenger;
     }
 }
