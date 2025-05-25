@@ -1,3 +1,4 @@
 rootProject.name = 'plane-boarding'
 include 'simulator'
+include 'passengers_generator'
 
