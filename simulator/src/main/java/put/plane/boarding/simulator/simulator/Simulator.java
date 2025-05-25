@@ -3,9 +3,13 @@ package put.plane.boarding.simulator.simulator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import put.plane.boarding.simulator.passenger.Passenger;
+import put.plane.boarding.simulator.passenger.action.Action;
+import put.plane.boarding.simulator.plane.Plane;
+import put.plane.boarding.simulator.plane.structure.queue.Queue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static put.plane.boarding.simulator.plane.PlaneConstants.EXIT_FROM_PLANE;
 
@@ -23,24 +27,11 @@ public final class Simulator {
 
         while (!passengers.isEmpty()) {
             passengers.forEach(passenger -> {
-                var nextAction = passenger.chooseAction(plane);
-                nextAction.ifPresent(action -> {
-                    passenger.setAction(action);
-                    if (action.getLocation() != queue.findPassenger(passenger)) {
-                        queue.lockSpot(passenger, action.getLocation());
-                    }
-                });
+                if (!passenger.isDuringAction()) {
+                    chooseNextAction(passenger, plane, queue);
+                }
                 if (passenger.isDuringAction()) {
-                    var action = passenger.toAction();
-                    if (action.isOver()) {
-                        passenger.onActionComplete();
-                        queue.releaseSpot(passenger);
-                        if (action.getLocation() != EXIT_FROM_PLANE) {
-                            queue.takeSpot(passenger, action.getLocation());
-                        }
-                    } else {
-                        action.makeProgress();
-                    }
+                    executePassengerAction(passenger, queue);
                 }
             });
             passengers = passengers.stream()
@@ -52,5 +43,28 @@ public final class Simulator {
         return SimulatorResponse.builder()
                 .time(resultTime)
                 .build();
+    }
+
+    private void executePassengerAction(Passenger passenger, Queue queue) {
+        var action = passenger.toAction();
+        if (action.isOver()) {
+            passenger.onActionComplete();
+            queue.releaseSpot(passenger);
+            if (action.getLocation() != EXIT_FROM_PLANE) {
+                queue.takeSpot(passenger, action.getLocation());
+            }
+        } else {
+            action.makeProgress();
+        }
+    }
+
+    private void chooseNextAction(Passenger passenger, Plane plane, Queue queue) {
+        var nextAction = passenger.chooseAction(plane);
+        nextAction.ifPresent(action -> {
+            passenger.setAction(action);
+            if (action.getLocation() != queue.findPassenger(passenger)) {
+                queue.lockSpot(passenger, action.getLocation());
+            }
+        });
     }
 }

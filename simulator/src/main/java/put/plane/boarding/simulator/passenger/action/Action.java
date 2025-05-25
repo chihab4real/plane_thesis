@@ -1,7 +1,9 @@
 package put.plane.boarding.simulator.passenger.action;
 
 import lombok.Getter;
+import lombok.ToString;
 
+@ToString
 @Getter
 public class Action {
 

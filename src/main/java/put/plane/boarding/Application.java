@@ -15,7 +15,6 @@ import put.plane.boarding.simulator.simulator.SimulatorRequest;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 
 import static put.plane.boarding.simulator.utils.PairUtils.generateUniquePairs;
 import java.util.ArrayList;
