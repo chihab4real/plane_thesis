@@ -6,12 +6,13 @@ public class Main {
     public static void main(String[] args) {
 
 
-        List<Passenger> passengers = Generator.generatePassengers(10,2, 21);
+        List<Passenger> passengers = Generator.generatePassengers(10,2, 20);
 
 
         for (Passenger p: passengers){
             System.out.println(
                     "\nPassenger ID: " + p.getID() + "\n" +
+                            "Seat:" + p.getSeatLocation() + "\n" +
                             "SpeedQueue: " + p.getSpeedQueue() + "\n" +
                             "SpeedExiting: " + p.getSpeedExiting() + "\n" +
                             "Luggage: " + p.isHasLuggage() +
