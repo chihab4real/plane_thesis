@@ -12,6 +12,7 @@ repositories {
 
 dependencies {
     implementation project(':simulator')
+    implementation project(':passengers-generator')
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     implementation 'org.springframework:spring-core:6.2.3'

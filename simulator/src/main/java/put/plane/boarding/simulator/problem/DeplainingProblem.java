@@ -2,7 +2,7 @@ package put.plane.boarding.simulator.problem;
 
 import lombok.Builder;
 import lombok.Data;
-import put.plane.boarding.simulator.passenger.Passenger;
+import put.plane.boarding.simulator.passenger.SimulatorPassenger;
 import put.plane.boarding.simulator.plane.Plane;
 
 import java.util.List;
@@ -11,6 +11,6 @@ import java.util.List;
 @Builder
 public class DeplainingProblem {
 
-    private List<Passenger> passengers;
+    private List<SimulatorPassenger> passengers;
     private Plane plane;
 }

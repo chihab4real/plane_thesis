@@ -2,7 +2,7 @@ package put.plane.boarding.simulator.plane.structure.queue;
 
 import lombok.Builder;
 import lombok.Data;
-import put.plane.boarding.simulator.passenger.Passenger;
+import put.plane.boarding.simulator.passenger.SimulatorPassenger;
 
 import java.util.*;
 
@@ -11,37 +11,37 @@ import java.util.*;
 public class Queue {
 
     private final int size;
-    private final List<Passenger> queueArray;
-    private final List<Passenger> queueLocks;
+    private final List<SimulatorPassenger> queueArray;
+    private final List<SimulatorPassenger> queueLocks;
 
     public boolean isSpotAvailable(int position) {
         return position < 0 ||
                 queueArray.get(position) == null && queueLocks.get(position) == null;
     }
 
-    public void takeSpot(Passenger passenger, int position) {
+    public void takeSpot(SimulatorPassenger passenger, int position) {
         queueArray.set(position, passenger);
         queueLocks.set(position, null);
     }
 
-    public void lockSpot(Passenger passenger, int position) {
+    public void lockSpot(SimulatorPassenger passenger, int position) {
         if (position >= 0) {
             queueLocks.set(position, passenger);
         }
     }
 
-    public void releaseSpot(Passenger passenger) {
+    public void releaseSpot(SimulatorPassenger passenger) {
         var position = findPassenger(passenger);
         if (position >= 0) {
             queueArray.set(position, null);
         }
     }
 
-    public int findPassenger(Passenger passenger) {
+    public int findPassenger(SimulatorPassenger passenger) {
         return queueArray.indexOf(passenger);
     }
 
-    public int stepInDirection(Passenger passenger, int targetLocation) {
+    public int stepInDirection(SimulatorPassenger passenger, int targetLocation) {
         var passengerLocation = findPassenger(passenger);
         return passengerLocation == targetLocation ?
             passengerLocation : passengerLocation > targetLocation ?
