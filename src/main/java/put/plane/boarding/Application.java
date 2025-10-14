@@ -31,7 +31,6 @@ import static put.plane.boarding.simulator.problem.factory.passenger.PassengerFa
 public class Application {
 
     private final Simulator simulator;
-    private final PassengerFactory passengerFactory;
     private final PlaneFactory planeFactory;
     private final Random random;
 
