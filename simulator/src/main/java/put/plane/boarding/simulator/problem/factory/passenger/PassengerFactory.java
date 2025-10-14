@@ -1,5 +1,6 @@
 package put.plane.boarding.simulator.problem.factory.passenger;
 
+import lombok.experimental.UtilityClass;
 import org.springframework.stereotype.Service;
 import put.plane.boarding.passengers.generator.Passenger;
 import put.plane.boarding.simulator.passenger.SimulatorPassenger;
@@ -11,7 +12,7 @@ import put.plane.boarding.simulator.passenger.impl.DefaultPassenger;
 import java.util.Arrays;
 import java.util.List;
 
-@Service
+@UtilityClass
 public class PassengerFactory {
 
     public static List<SimulatorPassenger> createSimulatorPassenger(Plane plane, List<Passenger> passengers) {
