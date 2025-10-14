@@ -31,7 +31,7 @@ public class Queue {
     }
 
     public void releaseSpot(SimulatorPassenger passenger) {
-        var position = findPassenger(passenger);
+        int position = findPassenger(passenger);
         if (position >= 0) {
             queueArray.set(position, null);
         }
@@ -42,7 +42,7 @@ public class Queue {
     }
 
     public int stepInDirection(SimulatorPassenger passenger, int targetLocation) {
-        var passengerLocation = findPassenger(passenger);
+        int passengerLocation = findPassenger(passenger);
         return passengerLocation == targetLocation ?
             passengerLocation : passengerLocation > targetLocation ?
                 passengerLocation - 1 :

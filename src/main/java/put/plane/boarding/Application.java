@@ -4,13 +4,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.stereotype.Service;
+import put.plane.boarding.passengers.generator.Passenger;
 import put.plane.boarding.passengers.generator.PassengerGenerator;
+import put.plane.boarding.simulator.passenger.SimulatorPassenger;
 import put.plane.boarding.simulator.plane.Plane;
 import put.plane.boarding.simulator.plane.factory.PlaneFactory;
 import put.plane.boarding.simulator.problem.DeplainingProblem;
 import put.plane.boarding.simulator.problem.factory.passenger.PassengerFactory;
 import put.plane.boarding.simulator.simulator.Simulator;
 import put.plane.boarding.simulator.simulator.SimulatorRequest;
+import put.plane.boarding.simulator.simulator.SimulatorResponse;
 
 import java.util.Collections;
 import java.util.List;
@@ -34,8 +37,8 @@ public class Application {
 
     public static void main(String[] args) {
 
-        var context = new AnnotationConfigApplicationContext(AppConfig.class);
-        var application = context.getBean(Application.class);
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
+        Application application = context.getBean(Application.class);
         application.run();
     }
 
@@ -43,7 +46,7 @@ public class Application {
         // creating example problem
         int rows = 16;
         int columns = 6;
-        var plane = planeFactory.create(rows, columns);
+        Plane plane = planeFactory.create(rows, columns);
 
         int numberOfPassengers = rows * columns;
 
@@ -121,17 +124,17 @@ public class Application {
     }
 
     public int getTimeForOrder(List<Integer> order, Plane plane) {
-        var generatedPassengers = PassengerGenerator.generatePassengers(plane.getRows(), plane.getColumns(), plane.getRows() * plane.getColumns(), 0);
-        var currPassengers = createSimulatorPassenger(plane, permute(generatedPassengers, order));
+        List<Passenger> generatedPassengers = PassengerGenerator.generatePassengers(plane.getRows(), plane.getColumns(), plane.getRows() * plane.getColumns(), 0);
+        List<SimulatorPassenger> currPassengers = createSimulatorPassenger(plane, permute(generatedPassengers, order));
         plane.boardPassengers(currPassengers);
 
-        var problem = DeplainingProblem.builder()
+        DeplainingProblem problem = DeplainingProblem.builder()
                 .plane(plane)
                 .passengers(currPassengers)
                 .build();
 
-        var request = new SimulatorRequest(problem);
-        var response = simulator.simulate(request);
+        SimulatorRequest request = new SimulatorRequest(problem);
+        SimulatorResponse response = simulator.simulate(request);
 
         return response.time();
     }

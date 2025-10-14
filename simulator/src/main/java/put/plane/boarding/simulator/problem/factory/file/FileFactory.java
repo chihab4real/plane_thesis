@@ -16,10 +16,10 @@ public class FileFactory {
     private final FileNamingStrategy fileNamingStrategy;
 
     public List<File> create(int numberOfFiles) {
-        var result = new ArrayList<File>();
+        List<File> result = new ArrayList<>();
 
         IntStream.range(0, numberOfFiles).forEach(i -> {
-            var file = new File(fileNamingStrategy.name(i), distance(i, numberOfFiles));
+            File file = new File(fileNamingStrategy.name(i), distance(i, numberOfFiles));
             result.add(file);
         });
 
@@ -27,7 +27,7 @@ public class FileFactory {
     }
 
     private int distance(int index, int numberOfFiles) {
-        var center = (numberOfFiles + 1) / 2;
+        int center = (numberOfFiles + 1) / 2;
 
         return index >= center ?
                 index - center + 1 :

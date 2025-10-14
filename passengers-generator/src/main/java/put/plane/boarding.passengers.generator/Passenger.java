@@ -8,7 +8,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class Passenger {
 
-    private final String ID = UUID.randomUUID().toString();
+    private final String id = UUID.randomUUID().toString();
     private final String seatLocation;
     private final Integer speedQueue;
     private final Integer speedExiting;

@@ -3,6 +3,7 @@ package put.plane.boarding.simulator.passenger.impl.decorator;
 import put.plane.boarding.simulator.passenger.SimulatorPassenger;
 import put.plane.boarding.simulator.passenger.action.Action;
 import put.plane.boarding.simulator.plane.Plane;
+import put.plane.boarding.simulator.plane.structure.queue.Queue;
 
 import java.util.Optional;
 
@@ -23,8 +24,8 @@ public class BaggagePassenger extends PassengerDecorator {
 
     @Override
     public Optional<Action> chooseAction(Plane plane) {
-        var bestAction = passenger.chooseAction(plane);
-        var newAction = baggageAction(plane);
+        Optional<Action> bestAction = passenger.chooseAction(plane);
+        Optional<Action> newAction = baggageAction(plane);
         return chooseBetterAction(bestAction, newAction);
     }
 
@@ -32,16 +33,16 @@ public class BaggagePassenger extends PassengerDecorator {
         if (hasBaggage) {
             return Optional.empty();
         }
-        var queue = plane.getQueue();
-        var positionInQueue = queue.findPassenger(this);
+        Queue queue = plane.getQueue();
+        int positionInQueue = queue.findPassenger(this);
         if (positionInQueue >= 0) {
             if (positionInQueue == baggageLocation) {
-                var result = new Action(positionInQueue, baggagePickDuration, this::onBaggagePicked);
+                Action result = new Action(positionInQueue, baggagePickDuration, this::onBaggagePicked);
                 return Optional.of(result);
             }
-            var nextPosition = queue.stepInDirection(this, baggageLocation);
+            int nextPosition = queue.stepInDirection(this, baggageLocation);
             if (queue.isSpotAvailable(nextPosition)) {
-                var result = new Action(nextPosition, toMovingDuration());
+                Action result = new Action(nextPosition, toMovingDuration());
                 return Optional.of(result);
             }
             return Optional.empty();

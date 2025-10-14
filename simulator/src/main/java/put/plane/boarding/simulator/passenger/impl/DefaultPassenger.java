@@ -6,6 +6,8 @@ import put.plane.boarding.simulator.passenger.SimulatorPassenger;
 import put.plane.boarding.simulator.passenger.action.Action;
 import put.plane.boarding.simulator.plane.Plane;
 import put.plane.boarding.simulator.plane.structure.Seat;
+import put.plane.boarding.simulator.plane.structure.queue.PassengersOnSeats;
+import put.plane.boarding.simulator.plane.structure.queue.Queue;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -24,24 +26,22 @@ public class DefaultPassenger implements SimulatorPassenger {
 
     @Override
     public Optional<Action> chooseAction(Plane plane) {
-        var queue = plane.getQueue();
-        var passengersOnSeats = plane.getPassengersOnSeats();
-        var positionInQueue = queue.findPassenger(this);
-        var isInQueue = positionInQueue >= 0;
+        Queue queue = plane.getQueue();
+        PassengersOnSeats passengersOnSeats = plane.getPassengersOnSeats();
+        int positionInQueue = queue.findPassenger(this);
+        boolean isInQueue = positionInQueue >= 0;
 
         if (!isInQueue) {
             if (queue.isSpotAvailable(seat.row()) && passengersOnSeats.isPassengerInFrontSeat(this)) {
-                var result = new Action(seat.row(), enteringDuration, () -> {
-                    passengersOnSeats.onPassengerOffSeat(this);
-                });
+                Action result = new Action(seat.row(), enteringDuration, () -> passengersOnSeats.onPassengerOffSeat(this));
                 return Optional.of(result);
             }
             return Optional.empty();
         }
 
-        var nextStep = queue.stepInDirection(this, EXIT_FROM_PLANE);
+        int nextStep = queue.stepInDirection(this, EXIT_FROM_PLANE);
         if (queue.isSpotAvailable(nextStep)) {
-            var result = new Action(nextStep, movingDuration, () -> {
+            Action result = new Action(nextStep, movingDuration, () -> {
                 if (nextStep == EXIT_FROM_PLANE) {
                     onLeavePlane();
                 }

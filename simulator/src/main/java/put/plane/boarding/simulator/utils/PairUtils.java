@@ -1,5 +1,6 @@
 package put.plane.boarding.simulator.utils;
 
+import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
@@ -8,17 +9,14 @@ import java.util.List;
 import java.util.Random;
 import java.util.stream.IntStream;
 
+@UtilityClass
 public class PairUtils {
 
     public static List<Pair<Integer, Integer>> generateUniquePairs(int numberOfPairs, int maximumValue1, int maximumValue2) {
 
-        var result = new ArrayList<Pair<Integer, Integer>>();
+        ArrayList<Pair<Integer, Integer>> result = new ArrayList<>();
 
-        IntStream.range(0, maximumValue1).forEach(i -> {
-            IntStream.range(0, maximumValue2).forEach(j -> {
-                result.add(Pair.of(i, j));
-            });
-        });
+        IntStream.range(0, maximumValue1).forEach(i -> IntStream.range(0, maximumValue2).forEach(j -> result.add(Pair.of(i, j))));
 
         Collections.shuffle(result, new Random(42));
 

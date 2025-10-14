@@ -27,7 +27,7 @@ public class PassengersOnSeats {
     }
 
     public boolean isPassengerInFrontSeat(SimulatorPassenger passenger) {
-        var passengersInFront = passengersOnSeatsByRows.get(passenger.toSeat().row())
+        List<SimulatorPassenger> passengersInFront = passengersOnSeatsByRows.get(passenger.toSeat().row())
                 .stream()
                 .filter(p -> p.toSeat().file().distance() < passenger.toSeat().file().distance())
                 .toList();

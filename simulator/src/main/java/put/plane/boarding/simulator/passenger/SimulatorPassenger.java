@@ -17,12 +17,12 @@ public interface SimulatorPassenger {
     Optional<Action> chooseAction(Plane plane);
 
     default boolean isDuringAction() {
-        var action = toAction();
+        Action action = toAction();
         return action != null;
     }
 
     default void onActionComplete() {
-        var action = toAction();
+        Action action = toAction();
         action.getOnActionCompleted().run();
         setAction(null);
     }

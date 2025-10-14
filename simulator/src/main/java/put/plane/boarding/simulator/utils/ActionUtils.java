@@ -17,8 +17,8 @@ public class ActionUtils {
             return action1;
         }
 
-        var location1 = action1.get().getLocation();
-        var location2 = action2.get().getLocation();
+        int location1 = action1.get().getLocation();
+        int location2 = action2.get().getLocation();
         return location1 >= location2 ?
                 action1 :
                 action2;
