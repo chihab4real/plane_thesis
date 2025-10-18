@@ -10,7 +10,6 @@ import put.plane.boarding.simulator.passenger.SimulatorPassenger;
 import put.plane.boarding.simulator.plane.Plane;
 import put.plane.boarding.simulator.plane.factory.PlaneFactory;
 import put.plane.boarding.simulator.problem.DeplainingProblem;
-import put.plane.boarding.simulator.problem.factory.passenger.PassengerFactory;
 import put.plane.boarding.simulator.simulator.Simulator;
 import put.plane.boarding.simulator.simulator.SimulatorRequest;
 import put.plane.boarding.simulator.simulator.SimulatorResponse;
@@ -51,8 +50,8 @@ public class Application {
 
         List<Integer> order = IntStream.range(0, numberOfPassengers).boxed().collect(Collectors.toList());
 
-        int best_time = -1;
-        List<Integer> best_order = new ArrayList<>(order);
+        int bestTime = -1;
+        List<Integer> bestOrder = new ArrayList<>(order);
 
         // Checking random combinations
         for (int i = 0; i < 100_000; i++) {
@@ -60,39 +59,39 @@ public class Application {
 
             int time = getTimeForOrder(order, plane);
 
-            if (time < best_time || best_time < 0) {
-                best_time = time;
-                Collections.copy(best_order, order);
+            if (time < bestTime || bestTime < 0) {
+                bestTime = time;
+                Collections.copy(bestOrder, order);
 
-                log.info("TIME({}): {}\nORDER: {}", i, best_time, best_order);
+                log.info("TIME({}): {}\nORDER: {}", i, bestTime, bestOrder);
             }
         }
 
         log.info("\n\nSwapping pairs");
         // Swapping pairs, only if the time is improved
-        List<Integer> last_order = IntStream.range(0, rows * columns).boxed().collect(Collectors.toList());
-        int last_time = getTimeForOrder(last_order, plane);
+        List<Integer> lastOrder = IntStream.range(0, rows * columns).boxed().collect(Collectors.toList());
+        int lastTime = getTimeForOrder(lastOrder, plane);
 
-        int no_change = 0;
+        int noChange = 0;
 
         for (int i = 0; i < 100_000; i++) {
-            order = swapTwoRand(last_order);
+            order = swapTwoRand(lastOrder);
             int time = getTimeForOrder(order, plane);
 
-            if (time < last_time) {
-                Collections.copy(last_order, order);
-                last_time = time;
-                log.info("TIME({}): {}\nORDER: {}", i, last_time, last_order);
+            if (time < lastTime) {
+                Collections.copy(lastOrder, order);
+                lastTime = time;
+                log.info("TIME({}): {}\nORDER: {}", i, lastTime, lastOrder);
             }
             else {
-                no_change++;
+                noChange++;
 
-                if (no_change >= 10_000) {
-                    no_change = 0;
+                if (noChange >= 10_000) {
+                    noChange = 0;
 
-                    Collections.shuffle(last_order);
-                    last_time = getTimeForOrder(last_order, plane);
-                    log.info("Started from random point\nTIME({}): {}\nORDER: {}", i, last_time, last_order);
+                    Collections.shuffle(lastOrder);
+                    lastTime = getTimeForOrder(lastOrder, plane);
+                    log.info("Started from random point\nTIME({}): {}\nORDER: {}", i, lastTime, lastOrder);
                 }
             }
         }
@@ -110,14 +109,14 @@ public class Application {
     }
 
     public List<Integer> swapTwoRand(List<Integer> original) {
-        int[] to_swap = random
+        int[] toSwap = random
                 .ints(0, original.size())
                 .limit(2)
                 .toArray();
 
         List<Integer> result = new ArrayList<>(original);
-        result.set(to_swap[0], original.get(to_swap[1]));
-        result.set(to_swap[1], original.get(to_swap[0]));
+        result.set(toSwap[0], original.get(toSwap[1]));
+        result.set(toSwap[1], original.get(toSwap[0]));
 
         return result;
     }
