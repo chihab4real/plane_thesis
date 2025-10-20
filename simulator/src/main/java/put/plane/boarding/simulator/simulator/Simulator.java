@@ -7,6 +7,7 @@ import put.plane.boarding.simulator.passenger.action.Action;
 import put.plane.boarding.simulator.plane.Plane;
 import put.plane.boarding.simulator.plane.structure.queue.Queue;
 import put.plane.boarding.simulator.problem.DeplainingProblem;
+import put.plane.boarding.simulator.problem.PassengerGroup;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,22 +24,25 @@ public final class Simulator {
         DeplainingProblem problem = request.getProblem();
         Plane plane = problem.getPlane();
         Queue queue = plane.getQueue();
-        List<SimulatorPassenger> passengers = new ArrayList<>(problem.getPassengers());
+        List<PassengerGroup> passengerGroups = new ArrayList<>(problem.getPassengers());
         int resultTime = 0;
 
-        while (!passengers.isEmpty()) {
-            passengers.forEach(passenger -> {
-                if (!passenger.isDuringAction()) {
-                    chooseNextAction(passenger, plane, queue);
-                }
-                if (passenger.isDuringAction()) {
-                    executePassengerAction(passenger, queue);
-                }
-            });
-            passengers = passengers.stream()
-                    .filter(SimulatorPassenger::isOnPlane)
-                    .toList();
-            resultTime++;
+        for (PassengerGroup passengerGroup : passengerGroups) {
+            List<SimulatorPassenger> passengers = passengerGroup.getPassengers();
+            while (!passengers.isEmpty()) {
+                passengers.forEach(passenger -> {
+                    if (!passenger.isDuringAction()) {
+                        chooseNextAction(passenger, plane, queue);
+                    }
+                    if (passenger.isDuringAction()) {
+                        executePassengerAction(passenger, queue);
+                    }
+                });
+                passengers = passengers.stream()
+                        .filter(SimulatorPassenger::isOnPlane)
+                        .toList();
+                resultTime++;
+            }
         }
 
         return SimulatorResponse.builder()
