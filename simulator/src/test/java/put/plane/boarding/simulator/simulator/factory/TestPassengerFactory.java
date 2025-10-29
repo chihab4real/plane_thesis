@@ -12,9 +12,9 @@ public class TestPassengerFactory {
 
     public SimulatorPassenger create(Plane plane, int row, int column, int passengerSpeed, int queueEnteringSpeed) {
 
-        var seat = new Seat(row, plane.getFiles().get(column));
+        Seat seat = new Seat(row, plane.getFiles().get(column));
 
-        var defaultPassenger = new DefaultPassenger(seat, passengerSpeed, queueEnteringSpeed);
+        DefaultPassenger defaultPassenger = new DefaultPassenger(seat, passengerSpeed, queueEnteringSpeed);
         return new PassengerBuilder(defaultPassenger)
                 .build();
     }

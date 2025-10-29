@@ -2,10 +2,10 @@ package put.plane.boarding.simulator.plane;
 
 import lombok.Builder;
 import lombok.Data;
-import put.plane.boarding.simulator.passenger.SimulatorPassenger;
 import put.plane.boarding.simulator.plane.structure.File;
 import put.plane.boarding.simulator.plane.structure.queue.PassengersOnSeats;
 import put.plane.boarding.simulator.plane.structure.queue.Queue;
+import put.plane.boarding.simulator.problem.PassengerGroup;
 
 import java.util.List;
 
@@ -21,7 +21,10 @@ public class Plane {
         return files.size();
     }
 
-    public void boardPassengers(List<SimulatorPassenger> passengers) {
-        passengersOnSeats.boardPassengers(passengers);
+    public void boardPassengers(List<PassengerGroup> passengerGroups) {
+        passengerGroups
+                .stream()
+                .map(PassengerGroup::getPassengers)
+                .forEach(passengersOnSeats::boardPassengers);
     }
 }
