@@ -15,21 +15,21 @@ public class PassengersOnSeats {
     public void boardPassengers(List<SimulatorPassenger> passengers) {
         passengersOnSeatsByRows = passengers.stream()
                 .collect(Collectors.groupingBy(
-                        passenger -> passenger.toSeat().row(),
+                        passenger -> passenger.seat().row(),
                         Collectors.toSet()
                 ));
     }
 
     public void onPassengerOffSeat(SimulatorPassenger passenger) {
         passengersOnSeatsByRows
-                .get(passenger.toSeat().row())
+                .get(passenger.seat().row())
                 .remove(passenger);
     }
 
     public boolean isPassengerInFrontSeat(SimulatorPassenger passenger) {
-        List<SimulatorPassenger> passengersInFront = passengersOnSeatsByRows.get(passenger.toSeat().row())
+        List<SimulatorPassenger> passengersInFront = passengersOnSeatsByRows.get(passenger.seat().row())
                 .stream()
-                .filter(p -> p.toSeat().file().distance() < passenger.toSeat().file().distance())
+                .filter(p -> p.seat().file().distance() < passenger.seat().file().distance())
                 .toList();
         return passengersInFront.isEmpty();
     }

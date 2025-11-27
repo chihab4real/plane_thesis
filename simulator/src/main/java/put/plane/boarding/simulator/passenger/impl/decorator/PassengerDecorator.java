@@ -11,8 +11,13 @@ public abstract class PassengerDecorator implements SimulatorPassenger {
     protected final SimulatorPassenger passenger;
 
     @Override
-    public Seat toSeat() {
-        return passenger.toSeat();
+    public Seat startSeat() {
+        return passenger.startSeat();
+    }
+
+    @Override
+    public Seat seat() {
+        return passenger.seat();
     }
 
     @Override

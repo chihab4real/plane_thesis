@@ -14,6 +14,7 @@ import put.plane.boarding.simulator.problem.factory.passenger.PassengerFactory;
 import put.plane.boarding.simulator.simulator.Simulator;
 import put.plane.boarding.simulator.simulator.SimulatorRequest;
 import put.plane.boarding.simulator.simulator.SimulatorResponse;
+import put.plane.boarding.simulator.simulator.frame.XMLService;
 import put.plane.boarding.simulator.utils.GroupUtils;
 
 import java.util.Collections;
@@ -32,6 +33,7 @@ public class Application {
     private final Simulator simulator;
     private final PlaneFactory planeFactory;
     private final Random random;
+    private final XMLService xmlService;
 
     public static void main(String[] args) {
 
@@ -48,53 +50,53 @@ public class Application {
 
         int numberOfPassengers = rows * columns;
 
-        List<Integer> order = IntStream.range(0, numberOfPassengers).boxed().collect(Collectors.toList());
-
-        int bestTime = -1;
-        List<Integer> bestOrder = new ArrayList<>(order);
+//        List<Integer> order = IntStream.range(0, numberOfPassengers).boxed().collect(Collectors.toList());
+//
+//        int bestTime = -1;
+//        List<Integer> bestOrder = new ArrayList<>(order);
 
         // Checking random combinations
-        for (int i = 0; i < 100_000; i++) {
-            Collections.shuffle(order);
-
-            int time = getTimeForOrder(order, plane);
-
-            if (time < bestTime || bestTime < 0) {
-                bestTime = time;
-                Collections.copy(bestOrder, order);
-
-                log.info("TIME({}): {}\nORDER: {}", i, bestTime, bestOrder);
-            }
-        }
+//        for (int i = 0; i < 100_000; i++) {
+//            Collections.shuffle(order);
+//
+//            int time = getTimeForOrder(order, plane);
+//
+//            if (time < bestTime || bestTime < 0) {
+//                bestTime = time;
+//                Collections.copy(bestOrder, order);
+//
+//                log.info("TIME({}): {}\nORDER: {}", i, bestTime, bestOrder);
+//            }
+//        }
 
         log.info("\n\nSwapping pairs");
         // Swapping pairs, only if the time is improved
         List<Integer> lastOrder = IntStream.range(0, rows * columns).boxed().collect(Collectors.toList());
         int lastTime = getTimeForOrder(lastOrder, plane);
 
-        int noChange = 0;
-
-        for (int i = 0; i < 100_000; i++) {
-            order = swapTwoRand(lastOrder);
-            int time = getTimeForOrder(order, plane);
-
-            if (time < lastTime) {
-                Collections.copy(lastOrder, order);
-                lastTime = time;
-                log.info("TIME({}): {}\nORDER: {}", i, lastTime, lastOrder);
-            }
-            else {
-                noChange++;
-
-                if (noChange >= 10_000) {
-                    noChange = 0;
-
-                    Collections.shuffle(lastOrder);
-                    lastTime = getTimeForOrder(lastOrder, plane);
-                    log.info("Started from random point\nTIME({}): {}\nORDER: {}", i, lastTime, lastOrder);
-                }
-            }
-        }
+//        int noChange = 0;
+//
+//        for (int i = 0; i < 100_000; i++) {
+//            order = swapTwoRand(lastOrder);
+//            int time = getTimeForOrder(order, plane);
+//
+//            if (time < lastTime) {
+//                Collections.copy(lastOrder, order);
+//                lastTime = time;
+//                log.info("TIME({}): {}\nORDER: {}", i, lastTime, lastOrder);
+//            }
+//            else {
+//                noChange++;
+//
+//                if (noChange >= 10_000) {
+//                    noChange = 0;
+//
+//                    Collections.shuffle(lastOrder);
+//                    lastTime = getTimeForOrder(lastOrder, plane);
+//                    log.info("Started from random point\nTIME({}): {}\nORDER: {}", i, lastTime, lastOrder);
+//                }
+//            }
+//        }
     }
 
     public <T> List<T> permute(List<T> original, List<Integer> scheme) {
@@ -134,6 +136,7 @@ public class Application {
 
         SimulatorRequest request = new SimulatorRequest(problem);
         SimulatorResponse response = simulator.simulate(request);
+        xmlService.saveVisualization(response.visualizationDto());
 
         return response.time();
     }
