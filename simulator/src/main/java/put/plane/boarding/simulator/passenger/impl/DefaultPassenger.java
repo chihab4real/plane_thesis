@@ -15,14 +15,21 @@ import java.util.Optional;
 import static put.plane.boarding.simulator.plane.PlaneConstants.EXIT_FROM_PLANE;
 
 @ToString
-@RequiredArgsConstructor
 public class DefaultPassenger implements SimulatorPassenger {
 
     private Action action;
+    private final Seat startSeat;
     private final Seat seat;
     private final int movingDuration;
     private final int enteringDuration;
     private boolean hasLeftPlane = false;
+
+    public DefaultPassenger(Seat seat, int movingDuration, int enteringDuration) {
+        this.seat = seat;
+        this.startSeat = seat;
+        this.movingDuration = movingDuration;
+        this.enteringDuration = enteringDuration;
+    }
 
     @Override
     public Optional<Action> chooseAction(Plane plane) {
@@ -52,7 +59,12 @@ public class DefaultPassenger implements SimulatorPassenger {
     }
 
     @Override
-    public Seat toSeat() {
+    public Seat startSeat() {
+        return startSeat;
+    }
+
+    @Override
+    public Seat seat() {
         return seat;
     }
 

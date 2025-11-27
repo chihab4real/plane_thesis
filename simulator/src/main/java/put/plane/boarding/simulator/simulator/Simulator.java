@@ -8,6 +8,9 @@ import put.plane.boarding.simulator.plane.Plane;
 import put.plane.boarding.simulator.plane.structure.queue.Queue;
 import put.plane.boarding.simulator.problem.DeplainingProblem;
 import put.plane.boarding.simulator.problem.PassengerGroup;
+import put.plane.boarding.simulator.simulator.frame.dto.SingleFrame;
+import put.plane.boarding.simulator.simulator.frame.dto.SinglePassenger;
+import put.plane.boarding.simulator.simulator.frame.dto.VisualizationDto;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +29,7 @@ public final class Simulator {
         Queue queue = plane.getQueue();
         List<PassengerGroup> passengerGroups = new ArrayList<>(problem.getPassengers());
         int resultTime = 0;
+        List<SingleFrame> visualizationFrames = new ArrayList<>();
 
         for (PassengerGroup passengerGroup : passengerGroups) {
             List<SimulatorPassenger> passengers = passengerGroup.getPassengers();
@@ -41,13 +45,27 @@ public final class Simulator {
                 passengers = passengers.stream()
                         .filter(SimulatorPassenger::isOnPlane)
                         .toList();
+                savePassengerFrames(passengers, queue, visualizationFrames);
                 resultTime++;
             }
         }
 
         return SimulatorResponse.builder()
                 .time(resultTime)
+                .visualizationDto(new VisualizationDto(plane, visualizationFrames))
                 .build();
+    }
+
+    private static void savePassengerFrames(List<SimulatorPassenger> passengers, Queue queue, List<SingleFrame> visualizationFrames) {
+        List<SinglePassenger> frame = new ArrayList<>();
+        passengers.forEach(passenger -> {
+            if (queue.findPassenger(passenger) != -1) {
+                frame.add(new SinglePassenger(passenger, queue));
+            } else {
+                frame.add(new SinglePassenger(passenger));
+            }
+        });
+        visualizationFrames.add(new SingleFrame(frame));
     }
 
     private void executePassengerAction(SimulatorPassenger passenger, Queue queue) {
