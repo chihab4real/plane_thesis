@@ -19,7 +19,7 @@ import static put.plane.boarding.simulator.plane.PlaneConstants.EXIT_FROM_PLANE;
 @RequiredArgsConstructor
 public final class Simulator {
 
-    public static SimulatorResponse simulate(SimulatorRequest request) {
+    public SimulatorResponse simulate(SimulatorRequest request) {
 
         DeplainingProblem problem = request.getProblem();
         Plane plane = problem.getPlane();
@@ -50,7 +50,7 @@ public final class Simulator {
                 .build();
     }
 
-    private static void executePassengerAction(SimulatorPassenger passenger, Queue queue) {
+    private void executePassengerAction(SimulatorPassenger passenger, Queue queue) {
         Action action = passenger.toAction();
         if (action.isOver()) {
             passenger.onActionComplete();
@@ -63,7 +63,7 @@ public final class Simulator {
         }
     }
 
-    private static void chooseNextAction(SimulatorPassenger passenger, Plane plane, Queue queue) {
+    private void chooseNextAction(SimulatorPassenger passenger, Plane plane, Queue queue) {
         Optional<Action> nextAction = passenger.chooseAction(plane);
         nextAction.ifPresent(action -> {
             passenger.setAction(action);

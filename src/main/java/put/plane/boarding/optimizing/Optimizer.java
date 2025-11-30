@@ -1,7 +1,9 @@
 package put.plane.boarding.optimizing;
 
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 import put.plane.boarding.passengers.generator.Passenger;
 import put.plane.boarding.passengers.generator.PassengerGenerator;
 import put.plane.boarding.simulator.plane.Plane;
@@ -21,24 +23,13 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Slf4j
+@Service
+@RequiredArgsConstructor
 public class Optimizer {
-    private final Plane plane;
 
-    private List<Integer> order;
+    private final Simulator simulator;
 
-    @Getter
-    private int bestTime;
-    @Getter
-    private final List<Integer> bestOrder;
-
-    public Optimizer(Plane plane) {
-        this.plane = plane;
-        order = IntStream.range(0, plane.getColumns() * plane.getRows()).boxed().collect(Collectors.toList());
-        bestOrder = new ArrayList<>(order);
-        bestTime = getTimeForOrder(bestOrder, plane);
-    }
-
-    public int randomOptimization(int numRepetitions, boolean logs) {
+    public OptimizerResult randomOptimization(int numRepetitions, boolean logs, List<Integer> order, Plane plane) {
         int bestTime = -1;
         List<Integer> bestOrder = new ArrayList<>(order);
 
@@ -51,10 +42,10 @@ public class Optimizer {
                 bestTime = time;
                 Collections.copy(bestOrder, order);
 
-                if (time < this.bestTime) {
-                    this.bestTime = time;
-                    Collections.copy(this.bestOrder, order);
-                }
+//                if (time < this.bestTime) {
+//                    this.bestTime = time;
+//                    Collections.copy(this.bestOrder, order);
+//                }
 
                 if (logs) {
                     log.info("TIME({}): {}\nORDER: {}", i, bestTime, bestOrder);
@@ -62,14 +53,15 @@ public class Optimizer {
             }
         }
 
-        return bestTime;
+        return new OptimizerResult(bestTime, bestOrder);
     }
 
-    public int pairSwapOptimization(int numRepetitions, int noChangeLimit, boolean logs) {
+    public OptimizerResult pairSwapOptimization(int numRepetitions, int noChangeLimit, boolean logs, List<Integer> order, Plane plane) {
         int bestTime = -1;
 
         Collections.shuffle(order);
         List<Integer> lastOrder = new ArrayList<>(order);
+        List<Integer> bestOrder = new ArrayList<>(lastOrder);
         Collections.copy(lastOrder, order);
         int lastTime = getTimeForOrder(lastOrder, plane);
 
@@ -84,10 +76,6 @@ public class Optimizer {
 
                 if (time < bestTime || bestTime < 0) {
                     bestTime = time;
-                }
-
-                if (time < this.bestTime) {
-                    this.bestTime = time;
                     Collections.copy(bestOrder, order);
                 }
 
@@ -110,7 +98,7 @@ public class Optimizer {
             }
         }
 
-        return bestTime;
+        return new OptimizerResult(bestTime, bestOrder);
     }
 
     private int getTimeForOrder(List<Integer> order, Plane plane) {
@@ -130,7 +118,7 @@ public class Optimizer {
                 .build();
 
         SimulatorRequest request = new SimulatorRequest(problem);
-        SimulatorResponse response = Simulator.simulate(request);
+        SimulatorResponse response = simulator.simulate(request);
 
         return response.time();
     }
