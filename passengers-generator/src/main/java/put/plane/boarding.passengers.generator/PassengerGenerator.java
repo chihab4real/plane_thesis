@@ -53,6 +53,11 @@ public class PassengerGenerator {
             ));
         }
 
+        passengers.sort(Comparator.comparingInt(passenger -> {
+            String[] l = passenger.getSeatLocation().split("_");
+            return numberOfRowsInPlane * Integer.parseInt(l[0]) + Integer.parseInt(l[1]);
+        }));
+
         return passengers;
     }
 
