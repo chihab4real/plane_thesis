@@ -8,7 +8,8 @@ import java.util.Optional;
 
 public interface SimulatorPassenger {
 
-    Seat toSeat();
+    Seat startSeat();
+    Seat seat();
     int toMovingDuration();
     Action toAction();
     void setAction(Action action);

@@ -1,10 +1,10 @@
 package put.plane.boarding.simulator.simulator;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import put.plane.boarding.simulator.simulator.frame.dto.VisualizationDto;
 
 @Builder
 public record SimulatorResponse(
-        int time
+        int time,
+        VisualizationDto visualizationDto
 ) {}
