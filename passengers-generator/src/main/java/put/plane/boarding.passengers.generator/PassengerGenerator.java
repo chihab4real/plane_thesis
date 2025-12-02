@@ -46,8 +46,10 @@ public class PassengerGenerator {
 
             passengers.add(new Passenger(
                     seat,
-                    1 + rand.nextInt(10),
-                    1 + rand.nextInt(10),
+//                    1 + rand.nextInt(10),
+//                    1 + rand.nextInt(10),
+                    2,
+                    3,
                     hasLuggage,
                     hasLuggage ? seat: null
             ));

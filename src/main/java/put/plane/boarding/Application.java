@@ -6,6 +6,8 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.stereotype.Service;
 import put.plane.boarding.optimizing.Optimizer;
 import put.plane.boarding.optimizing.OptimizerResult;
+import put.plane.boarding.passengers.generator.Passenger;
+import put.plane.boarding.passengers.generator.PassengerGenerator;
 import put.plane.boarding.simulator.plane.Plane;
 import put.plane.boarding.simulator.plane.factory.PlaneFactory;
 import put.plane.boarding.simulator.problem.DeplainingProblem;
@@ -41,25 +43,31 @@ public class Application {
     public void run() {
         // creating example problem
         Plane plane = planeFactory.create(16, 6);
-        List<Integer> order = IntStream.range(0, plane.getColumns() * plane.getRows()).boxed().collect(Collectors.toList());
+        List<Passenger> generatedPassengers = PassengerGenerator.generatePassengers(
+                plane.getRows(),
+                plane.getColumns(),
+                plane.getRows() * plane.getColumns(),
+                0
+        );
 
         log.info("Random\n\n");
         // Checking random combinations
-        OptimizerResult randResult = optimizer.randomOptimization(100_000, true, order, plane);
-        int bestTime = randResult.bestTime();
+        OptimizerResult randResult = optimizer.randomOptimization(
+                10_000, true, plane, generatedPassengers);
+        float bestTime = randResult.bestTime();
         List<Integer> bestOrder = randResult.bestSolution();
-        log.info("Best time from random search: {}\n\n", randResult);
 
         log.info("Swapping pairs\n\n");
         // Swapping pairs, only if the time is improved
-        OptimizerResult swapResult = optimizer.pairSwapOptimization(100_000, 10_000, true, order, plane);
+        OptimizerResult swapResult = optimizer.pairSwapOptimization(
+                10_000, 1000, true, plane, generatedPassengers);
         if (swapResult.bestTime() < bestTime) {
             bestTime = swapResult.bestTime();
             bestOrder = swapResult.bestSolution();
         }
 
+        log.info("Best time from random search: {}\n\n", randResult);
         log.info("Best time from pair swap: {}\n\n", swapResult);
-
         log.info("Best time found: {}\nBest order found:\n{}", bestTime, bestOrder);
     }
 }

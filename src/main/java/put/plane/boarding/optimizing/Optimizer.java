@@ -1,11 +1,9 @@
 package put.plane.boarding.optimizing;
 
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import put.plane.boarding.passengers.generator.Passenger;
-import put.plane.boarding.passengers.generator.PassengerGenerator;
 import put.plane.boarding.simulator.plane.Plane;
 import put.plane.boarding.simulator.problem.DeplainingProblem;
 import put.plane.boarding.simulator.problem.PassengerGroup;
@@ -29,23 +27,23 @@ public class Optimizer {
 
     private final Simulator simulator;
 
-    public OptimizerResult randomOptimization(int numRepetitions, boolean logs, List<Integer> order, Plane plane) {
-        int bestTime = -1;
+    public OptimizerResult randomOptimization(int numRepetitions, boolean logs, Plane plane, List<Passenger> passengers) {
+        return randomOptimizationBatch(numRepetitions, logs, plane, List.of(passengers));
+    }
+    public OptimizerResult randomOptimizationBatch(int numRepetitions, boolean logs, Plane plane, List<List<Passenger>> passengers) {
+        List<Integer> order = IntStream.range(0, plane.getColumns() * plane.getRows()).boxed().collect(Collectors.toList());
+
+        float bestTime = -1;
         List<Integer> bestOrder = new ArrayList<>(order);
 
         for (int i = 0; i < numRepetitions; i++) {
             Collections.shuffle(order);
 
-            int time = getTimeForOrder(order, plane);
+            float time = getTimeForOrders(order, plane, passengers);
 
             if (time < bestTime || bestTime < 0) {
                 bestTime = time;
                 Collections.copy(bestOrder, order);
-
-//                if (time < this.bestTime) {
-//                    this.bestTime = time;
-//                    Collections.copy(this.bestOrder, order);
-//                }
 
                 if (logs) {
                     log.info("TIME({}): {}\nORDER: {}", i, bestTime, bestOrder);
@@ -56,19 +54,25 @@ public class Optimizer {
         return new OptimizerResult(bestTime, bestOrder);
     }
 
-    public OptimizerResult pairSwapOptimization(int numRepetitions, int noChangeLimit, boolean logs, List<Integer> order, Plane plane) {
-        int bestTime = -1;
+    public OptimizerResult pairSwapOptimization(int numRepetitions, int noChangeLimit, boolean logs, Plane plane, List<Passenger> passengers) {
+        return pairSwapOptimizationBatch(numRepetitions, noChangeLimit, logs, plane, List.of(passengers));
+    }
+
+    public OptimizerResult pairSwapOptimizationBatch(int numRepetitions, int noChangeLimit, boolean logs, Plane plane, List<List<Passenger>> passengers) {
+        List<Integer> order = IntStream.range(0, plane.getColumns() * plane.getRows()).boxed().collect(Collectors.toList());
+
+        float bestTime = -1;
 
         Collections.shuffle(order);
         List<Integer> lastOrder = new ArrayList<>(order);
         List<Integer> bestOrder = new ArrayList<>(lastOrder);
         Collections.copy(lastOrder, order);
-        int lastTime = getTimeForOrder(lastOrder, plane);
+        float lastTime = getTimeForOrders(lastOrder, plane, passengers);
 
         int noChange = 0;
         for (int i = 0; i < numRepetitions; i++) {
             order = swapTwoRand(lastOrder);
-            int time = getTimeForOrder(order, plane);
+            float time = getTimeForOrders(order, plane, passengers);
 
             if (time < lastTime) {
                 Collections.copy(lastOrder, order);
@@ -90,7 +94,7 @@ public class Optimizer {
                     noChange = 0;
 
                     Collections.shuffle(lastOrder);
-                    lastTime = getTimeForOrder(lastOrder, plane);
+                    lastTime = getTimeForOrders(lastOrder, plane, passengers);
                     if (logs) {
                         log.info("Started from random point\nTIME({}): {}\nORDER: {}", i, lastTime, lastOrder);
                     }
@@ -101,26 +105,30 @@ public class Optimizer {
         return new OptimizerResult(bestTime, bestOrder);
     }
 
-    private int getTimeForOrder(List<Integer> order, Plane plane) {
-        List<Passenger> generatedPassengers = PassengerGenerator.generatePassengers(
-                plane.getRows(),
-                plane.getColumns(),
-                plane.getRows() * plane.getColumns(),
-                0
-        );
-        List<List<Passenger>> passengers = GroupUtils.singleGroup(permute(generatedPassengers, order));
-        List<PassengerGroup> currPassengers = PassengerFactory.createSimulatorPassengers(plane, passengers);
-        plane.boardPassengers(currPassengers);
+    private float getTimeForOrder(List<Integer> order, Plane plane, List<Passenger> passengers) {
+        return getTimeForOrders(order, plane, List.of(passengers));
+    }
 
-        DeplainingProblem problem = DeplainingProblem.builder()
-                .plane(plane)
-                .passengers(currPassengers)
-                .build();
+    private float getTimeForOrders(List<Integer> order, Plane plane, List<List<Passenger>> passengersLists) {
+        float timeSum = 0;
 
-        SimulatorRequest request = new SimulatorRequest(problem);
-        SimulatorResponse response = simulator.simulate(request);
+        for(List<Passenger> generatedPassengers: passengersLists) {
+            List<List<Passenger>> passengers = GroupUtils.singleGroup(permute(generatedPassengers, order));
+            List<PassengerGroup> currPassengers = PassengerFactory.createSimulatorPassengers(plane, passengers);
+            plane.boardPassengers(currPassengers);
 
-        return response.time();
+            DeplainingProblem problem = DeplainingProblem.builder()
+                    .plane(plane)
+                    .passengers(currPassengers)
+                    .build();
+
+            SimulatorRequest request = new SimulatorRequest(problem);
+            SimulatorResponse response = simulator.simulate(request);
+
+            timeSum += response.time();
+        }
+
+        return timeSum / passengersLists.size();
     }
 
     private static <T> List<T> permute(List<T> original, List<Integer> scheme) {

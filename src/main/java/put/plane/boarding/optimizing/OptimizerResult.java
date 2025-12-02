@@ -3,6 +3,6 @@ package put.plane.boarding.optimizing;
 import java.util.List;
 
 public record OptimizerResult(
-        int bestTime,
+        float bestTime,
         List<Integer> bestSolution
 ) {}
