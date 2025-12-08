@@ -44,12 +44,15 @@ public class PassengerGenerator {
             String seat = assignedSeats.get(i);
             boolean hasLuggage = luggageSet.contains(i);
 
+            int qSpeed = 3 + rand.nextInt(3);
+            int eSpeed = 2 * qSpeed;
+
             passengers.add(new Passenger(
                     seat,
 //                    1 + rand.nextInt(10),
 //                    1 + rand.nextInt(10),
-                    2,
-                    3,
+                    qSpeed,
+                    eSpeed,
                     hasLuggage,
                     hasLuggage ? seat: null
             ));

@@ -11,6 +11,7 @@ import put.plane.boarding.simulator.problem.factory.passenger.PassengerFactory;
 import put.plane.boarding.simulator.simulator.Simulator;
 import put.plane.boarding.simulator.simulator.SimulatorRequest;
 import put.plane.boarding.simulator.simulator.SimulatorResponse;
+import put.plane.boarding.simulator.simulator.frame.dto.VisualizationDto;
 import put.plane.boarding.simulator.utils.GroupUtils;
 
 import java.util.ArrayList;
@@ -33,7 +34,7 @@ public class Optimizer {
     public OptimizerResult randomOptimizationBatch(int numRepetitions, boolean logs, Plane plane, List<List<Passenger>> passengers) {
         List<Integer> order = IntStream.range(0, plane.getColumns() * plane.getRows()).boxed().collect(Collectors.toList());
 
-        float bestTime = -1;
+        float bestTime = Float.MAX_VALUE;
         List<Integer> bestOrder = new ArrayList<>(order);
 
         for (int i = 0; i < numRepetitions; i++) {
@@ -41,7 +42,7 @@ public class Optimizer {
 
             float time = getTimeForOrders(order, plane, passengers);
 
-            if (time < bestTime || bestTime < 0) {
+            if (time < bestTime) {
                 bestTime = time;
                 Collections.copy(bestOrder, order);
 
@@ -61,7 +62,7 @@ public class Optimizer {
     public OptimizerResult pairSwapOptimizationBatch(int numRepetitions, int noChangeLimit, boolean logs, Plane plane, List<List<Passenger>> passengers) {
         List<Integer> order = IntStream.range(0, plane.getColumns() * plane.getRows()).boxed().collect(Collectors.toList());
 
-        float bestTime = -1;
+        float bestTime = Float.MAX_VALUE;
 
         Collections.shuffle(order);
         List<Integer> lastOrder = new ArrayList<>(order);
@@ -78,7 +79,7 @@ public class Optimizer {
                 Collections.copy(lastOrder, order);
                 lastTime = time;
 
-                if (time < bestTime || bestTime < 0) {
+                if (time < bestTime) {
                     bestTime = time;
                     Collections.copy(bestOrder, order);
                 }
@@ -105,6 +106,20 @@ public class Optimizer {
         return new OptimizerResult(bestTime, bestOrder);
     }
 
+    public SimulatorResponse simulateForOrder(List<Integer> order, Plane plane, List<Passenger> generatedPassengers) {
+        List<List<Passenger>> passengers = GroupUtils.singleGroup(permute(generatedPassengers, order));
+        List<PassengerGroup> currPassengers = PassengerFactory.createSimulatorPassengers(plane, passengers);
+        plane.boardPassengers(currPassengers);
+
+        DeplainingProblem problem = DeplainingProblem.builder()
+                .plane(plane)
+                .passengers(currPassengers)
+                .build();
+
+        SimulatorRequest request = new SimulatorRequest(problem);
+        return simulator.simulate(request);
+    }
+
     private float getTimeForOrder(List<Integer> order, Plane plane, List<Passenger> passengers) {
         return getTimeForOrders(order, plane, List.of(passengers));
     }
@@ -113,17 +128,7 @@ public class Optimizer {
         float timeSum = 0;
 
         for(List<Passenger> generatedPassengers: passengersLists) {
-            List<List<Passenger>> passengers = GroupUtils.singleGroup(permute(generatedPassengers, order));
-            List<PassengerGroup> currPassengers = PassengerFactory.createSimulatorPassengers(plane, passengers);
-            plane.boardPassengers(currPassengers);
-
-            DeplainingProblem problem = DeplainingProblem.builder()
-                    .plane(plane)
-                    .passengers(currPassengers)
-                    .build();
-
-            SimulatorRequest request = new SimulatorRequest(problem);
-            SimulatorResponse response = simulator.simulate(request);
+            SimulatorResponse response = simulateForOrder(order, plane, generatedPassengers);
 
             timeSum += response.time();
         }
