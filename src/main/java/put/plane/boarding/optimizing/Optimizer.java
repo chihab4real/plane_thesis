@@ -1,18 +1,19 @@
 package put.plane.boarding.optimizing;
 
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import put.plane.boarding.passengers.generator.Passenger;
 import put.plane.boarding.passengers.generator.PassengerGenerator;
 import put.plane.boarding.simulator.plane.Plane;
+import put.plane.boarding.simulator.plane.factory.PlaneFactory;
 import put.plane.boarding.simulator.problem.DeplainingProblem;
 import put.plane.boarding.simulator.problem.PassengerGroup;
 import put.plane.boarding.simulator.problem.factory.passenger.PassengerFactory;
 import put.plane.boarding.simulator.simulator.Simulator;
 import put.plane.boarding.simulator.simulator.SimulatorRequest;
 import put.plane.boarding.simulator.simulator.SimulatorResponse;
+import put.plane.boarding.simulator.simulator.frame.XMLService;
 import put.plane.boarding.simulator.utils.GroupUtils;
 
 import java.util.ArrayList;
@@ -28,8 +29,10 @@ import java.util.stream.IntStream;
 public class Optimizer {
 
     private final Simulator simulator;
+    private final XMLService xmlservice;
+    private final PlaneFactory planeFactory;
 
-    public OptimizerResult randomOptimization(int numRepetitions, boolean logs, List<Integer> order, Plane plane) {
+   /* public OptimizerResult randomOptimization(int numRepetitions, boolean logs, List<Integer> order, Plane plane) {
         int bestTime = -1;
         List<Integer> bestOrder = new ArrayList<>(order);
 
@@ -54,9 +57,9 @@ public class Optimizer {
         }
 
         return new OptimizerResult(bestTime, bestOrder);
-    }
+    }*/
 
-    public OptimizerResult pairSwapOptimization(int numRepetitions, int noChangeLimit, boolean logs, List<Integer> order, Plane plane) {
+    /*public OptimizerResult pairSwapOptimization(int numRepetitions, int noChangeLimit, boolean logs, List<Integer> order, Plane plane) {
         int bestTime = -1;
 
         Collections.shuffle(order);
@@ -99,26 +102,278 @@ public class Optimizer {
         }
 
         return new OptimizerResult(bestTime, bestOrder);
-    }
+    }*/
 
-    private int getTimeForOrder(List<Integer> order, Plane plane) {
+    public OptimizerResult zigzagOptimization(boolean logs, List<Integer> order, Plane plane) {
         List<Passenger> generatedPassengers = PassengerGenerator.generatePassengers(
                 plane.getRows(),
                 plane.getColumns(),
                 plane.getRows() * plane.getColumns(),
                 0
         );
-        List<List<Passenger>> passengers = GroupUtils.singleGroup(permute(generatedPassengers, order));
-        List<PassengerGroup> currPassengers = PassengerFactory.createSimulatorPassengers(plane, passengers);
-        plane.boardPassengers(currPassengers);
+
+        int numColumns = plane.getColumns();
+
+        int centerColumn = numColumns / 2;
+        
+
+        int columnsPerSide = centerColumn;
+        
+
+        List<List<Integer>> allGroups = new ArrayList<>();
+        
+        for (int iteration = 0; iteration < columnsPerSide; iteration++) {
+            
+            int leftColumn = iteration + 1;
+            int rightColumn = numColumns - iteration;
+            
+            List<Integer> group1 = new ArrayList<>();
+            List<Integer> group2 = new ArrayList<>();
+            
+            for (int i = 0; i < generatedPassengers.size(); i++) {
+                Passenger passenger = generatedPassengers.get(i);
+                String seatLocation = passenger.getSeatLocation();
+                String[] parts = seatLocation.split("_");
+                int row = Integer.parseInt(parts[0]);
+                int column = Integer.parseInt(parts[1]);
+
+                boolean isLeftIterationColumn = (column == leftColumn);
+                boolean isRightIterationColumn = (column == rightColumn);
+                
+                if (!isLeftIterationColumn && !isRightIterationColumn) {
+                    continue;
+                }
+
+                if (row % 2 == 1) {
+
+                    if (isRightIterationColumn) {
+                        group1.add(i);
+                    } else {
+                        group2.add(i);
+                    }
+                } else {
+                    if (isLeftIterationColumn) {
+                        group1.add(i);
+                    } else {
+                        group2.add(i);
+                    }
+                }
+            }
+
+            allGroups.add(group1);
+            allGroups.add(group2);
+
+        }
+
+        List<List<Passenger>> mappedPassengers = allGroups
+                .stream()
+                .map(passengers->{
+                    return passengers
+                            .stream()
+                            .map(i -> generatedPassengers.get(i))
+                            .toList();
+                })
+                .toList();
+
+        mappedPassengers = mappedPassengers.reversed();
+
+        int time = getTimeForOrder(plane, mappedPassengers, "Zigzag");
+
+        if (logs) {
+            log.info("Zigzag Optimization (Iterative alternating sides)");
+            log.info("Number of iterations: {} (columns per side)", columnsPerSide);
+            log.info("Total groups: {}", allGroups.size());
+            for (int i = 0; i < allGroups.size(); i++) {
+                log.info("Group {} size: {}", i + 1, allGroups.get(i).size());
+            }
+        }
+
+        return new OptimizerResult(time, new ArrayList<>());
+    }
+
+    public OptimizerResult frontToBackOptimization(boolean logs, List<Integer> order, Plane plane) {
+        List<Passenger> generatedPassengers = PassengerGenerator.generatePassengers(
+                plane.getRows(),
+                plane.getColumns(),
+                plane.getRows() * plane.getColumns(),
+                0
+        );
+
+        int numRows = plane.getRows();
+
+        List<List<Integer>> allGroups = new ArrayList<>();
+
+        for (int i = 0;i<numRows;i++){
+            List<Integer> group = new ArrayList<>();
+            for (int j = 0;j<generatedPassengers.size();j++){
+                Passenger passenger = generatedPassengers.get(j);
+                String seatLocation = passenger.getSeatLocation();
+                String[] parts = seatLocation.split("_");
+                int row = Integer.parseInt(parts[0]);
+                if (row == i+1){
+                    group.add(j);
+                }
+            }
+            allGroups.add(group);
+        }
+
+        List<List<Passenger>> mappedPassengers = allGroups
+                .stream()
+                .map(passengers->{
+                    return passengers
+                            .stream()
+                            .map(i -> generatedPassengers.get(i))
+                            .toList();
+                })
+                .toList();
+
+        int time = getTimeForOrder(plane, mappedPassengers, "FrontToBack");
+        if (logs) {
+            log.info("FrontToBack Optimization (Row by row from front to back)");
+            log.info("Total groups: {}", allGroups.size());
+            for (int i = 0; i < allGroups.size(); i++) {
+                log.info("Group {} size: {}", i + 1, allGroups.get(i).size());
+            }
+        }
+
+        return new OptimizerResult(time, new ArrayList<>());
+
+    }
+
+    public OptimizerResult backToFrontOptimization(boolean logs, List<Integer> order, Plane plane) {
+        List<Passenger> generatedPassengers = PassengerGenerator.generatePassengers(
+                plane.getRows(),
+                plane.getColumns(),
+                plane.getRows() * plane.getColumns(),
+                0
+        );
+
+        int numRows = plane.getRows();
+
+        List<List<Integer>> allGroups = new ArrayList<>();
+        for (int i = numRows-1;i>=0;i--){
+            List<Integer> group = new ArrayList<>();
+            for (int j = 0;j<generatedPassengers.size();j++){
+                Passenger passenger = generatedPassengers.get(j);
+                String seatLocation = passenger.getSeatLocation();
+                String[] parts = seatLocation.split("_");
+                int row = Integer.parseInt(parts[0]);
+                if (row == i+1){
+                    group.add(j);
+                }
+            }
+            allGroups.add(group);
+        }
+        List<List<Passenger>> mappedPassengers = allGroups
+                .stream()
+                .map(passengers->{
+                    return passengers
+                            .stream()
+                            .map(i -> generatedPassengers.get(i))
+                            .toList();
+                })
+                .toList();
+        int time = getTimeForOrder(plane, mappedPassengers, "BackToFront");
+        if (logs) {
+            log.info("BackToFront Optimization (Row by row from back to front)");
+            log.info("Total groups: {}", allGroups.size());
+            for (int i = 0; i < allGroups.size(); i++) {
+                log.info("Group {} size: {}", i + 1, allGroups.get(i).size());
+            }
+
+
+        }
+        return new OptimizerResult(time, new ArrayList<>());
+    }
+
+    public OptimizerResult aisleMiddleWindow(boolean logs, List<Integer> order, Plane plane) {
+
+        List<Passenger> generatedPassengers = PassengerGenerator.generatePassengers(
+                plane.getRows(),
+                plane.getColumns(),
+                plane.getRows() * plane.getColumns(),
+                0
+        );
+
+        int numColumns = plane.getColumns();
+
+        int centerColumn = numColumns / 2;
+
+        int columnsPerSide = centerColumn;
+
+        List<List<Integer>> allGroups = new ArrayList<>();
+
+        for (int iteration = 0; iteration < columnsPerSide; iteration++) {
+
+            int leftColumn = centerColumn - iteration;
+            int rightColumn = centerColumn + 1 + iteration;
+
+            List<Integer> leftGroup = new ArrayList<>();
+            List<Integer> rightGroup = new ArrayList<>();
+
+            for (int i = 0; i < generatedPassengers.size(); i++) {
+                Passenger passenger = generatedPassengers.get(i);
+                String seatLocation = passenger.getSeatLocation();
+                String[] parts = seatLocation.split("_");
+                int row = Integer.parseInt(parts[0]);
+                int column = Integer.parseInt(parts[1]);
+
+                if (column == leftColumn) {
+                    leftGroup.add(i);
+                } else if (column == rightColumn) {
+                    rightGroup.add(i);
+                }
+            }
+
+            if (!leftGroup.isEmpty()) {
+                allGroups.add(leftGroup);
+            }
+            if (!rightGroup.isEmpty()) {
+                allGroups.add(rightGroup);
+            }
+        }
+
+
+        List<List<Passenger>> mappedPassengers = allGroups
+                .stream()
+                .map(passengers->{
+                    return passengers
+                            .stream()
+                            .map(i -> generatedPassengers.get(i))
+                            .toList();
+                })
+                .toList();
+
+        int time = getTimeForOrder(plane, mappedPassengers, "AisleMiddleWindow");
+
+        if (logs) {
+            log.info("aisleMiddleWindow Optimization");
+            log.info("Number of iterations: {} (columns per side)", columnsPerSide);
+            log.info("Total groups: {}", allGroups.size());
+            for (int i = 0; i < allGroups.size(); i++) {
+                log.info("Group {} size: {}", i + 1, allGroups.get(i).size());
+            }
+        }
+
+        return new OptimizerResult(time, new ArrayList<>());
+    }
+
+    private int getTimeForOrder(Plane plane, List<List<Passenger>> passengers, String methodName) {
+
+        Plane freshPlane = planeFactory.create(plane.getRows(), plane.getColumns());
+
+        List<PassengerGroup> currPassengers = PassengerFactory.createSimulatorPassengers(freshPlane, passengers);
+        freshPlane.boardPassengers(currPassengers);
 
         DeplainingProblem problem = DeplainingProblem.builder()
-                .plane(plane)
+                .plane(freshPlane)
                 .passengers(currPassengers)
                 .build();
 
         SimulatorRequest request = new SimulatorRequest(problem);
         SimulatorResponse response = simulator.simulate(request);
+
+        xmlservice.saveVisualization(response.visualizationDto(), methodName);
 
         return response.time();
     }

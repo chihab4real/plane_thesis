@@ -46,12 +46,17 @@ public class PassengerGenerator {
 
             passengers.add(new Passenger(
                     seat,
-                    1 + rand.nextInt(10),
-                    1 + rand.nextInt(10),
+                    1,
+                    2,
                     hasLuggage,
                     hasLuggage ? seat: null
             ));
         }
+
+        passengers.sort(Comparator.comparingInt(passenger -> {
+            String[] l = passenger.getSeatLocation().split("_");
+            return numberOfRowsInPlane * Integer.parseInt(l[0]) + Integer.parseInt(l[1]);
+        }));
 
         return passengers;
     }

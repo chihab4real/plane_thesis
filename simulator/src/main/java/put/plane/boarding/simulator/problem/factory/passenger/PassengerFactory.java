@@ -62,6 +62,6 @@ public class PassengerFactory {
         List<Integer> positions = Arrays.stream(baggageLocation.split("_"))
                 .map(Integer::parseInt)
                 .toList();
-        return positions.getFirst();
+        return positions.get(0);
     }
 }
