@@ -32,7 +32,6 @@ public class Application {
     private final Random random;
     private final XMLService xmlService;
     private final Optimizer optimizer;
-    private final Simulator simulator;
 
     public static void main(String[] args) {
 
@@ -47,21 +46,21 @@ public class Application {
         List<Integer> order = IntStream.range(0, plane.getColumns() * plane.getRows()).boxed().collect(Collectors.toList());
 
         log.info("Zigzag Optimization\n\n");
-        OptimizerResult zigzagResult = optimizer.zigzagOptimization(true, order, plane);
+        OptimizerResult zigzagResult = optimizer.zigzagOptimization(true, plane);
         log.info("Best time from zigzag: {}\n\n", zigzagResult);
 
         log.info("FrontToBack Optimization\n\n");
-        OptimizerResult frontToBack = optimizer.frontToBackOptimization(true, order, plane);
+        OptimizerResult frontToBack = optimizer.frontToBackOptimization(true, plane);
         log.info("Best time from frontToBack: {}\n\n", frontToBack);
 
 
         log.info("BackToFront Optimization\n\n");
-        OptimizerResult backToFront = optimizer.backToFrontOptimization(true, order, plane);
+        OptimizerResult backToFront = optimizer.backToFrontOptimization(true, plane);
         log.info("Best time from BackToFront: {}\n\n", backToFront);
 
 
         log.info("AislemMiddleWindow Optimization\n\n");
-        OptimizerResult aisleMiddleWindow = optimizer.aisleMiddleWindow(true, order, plane);
+        OptimizerResult aisleMiddleWindow = optimizer.aisleMiddleWindow(true, plane);
         log.info("Best time from BackToFront: {}\n\n", aisleMiddleWindow);
 
     }

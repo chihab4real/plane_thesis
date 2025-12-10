@@ -66,7 +66,7 @@ public class XMLService {
         });
 
         String currentDateString = DateFormatUtils.format(new Date(), "yyyy-MM-dd HH.mm.ss");
-        String fileName = "simulation-result-"+methodName +"-"+currentDateString + ".xml";
+        String fileName = "simulation-result-" + methodName + "-" + currentDateString + ".xml";
 
         Transformer transformer = TransformerFactory.newInstance().newTransformer();
         transformer.transform(new DOMSource(document), new StreamResult(fileName));
