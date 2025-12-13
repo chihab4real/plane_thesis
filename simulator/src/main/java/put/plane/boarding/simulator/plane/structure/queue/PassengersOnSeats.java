@@ -19,8 +19,9 @@ public class PassengersOnSeats {
     }
 
     public void onPassengerOffSeat(SimulatorPassenger passenger) {
-        Set<SimulatorPassenger> rowPassengers = passengersOnSeatsByRows.get(passenger.seat().row());
-        rowPassengers.remove(passenger);
+        passengersOnSeatsByRows
+                .get(passenger.seat().row())
+                .remove(passenger);
     }
 
     public boolean isPassengerInFrontSeat(SimulatorPassenger passenger) {
