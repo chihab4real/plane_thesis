@@ -20,7 +20,7 @@ import java.util.Date;
 public class XMLService {
 
     @SneakyThrows
-    public void saveVisualization(VisualizationDto dto) {
+    public void saveVisualization(VisualizationDto dto, String methodName) {
 
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
@@ -66,7 +66,7 @@ public class XMLService {
         });
 
         String currentDateString = DateFormatUtils.format(new Date(), "yyyy-MM-dd HH.mm.ss");
-        String fileName = "simulation-result-" + currentDateString + ".xml";
+        String fileName = "simulation-result-" + methodName + "-" + currentDateString + ".xml";
 
         Transformer transformer = TransformerFactory.newInstance().newTransformer();
         transformer.transform(new DOMSource(document), new StreamResult(fileName));

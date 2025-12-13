@@ -2,11 +2,11 @@ package put.plane.boarding.simulator.problem.factory.passenger;
 
 import lombok.experimental.UtilityClass;
 import put.plane.boarding.passengers.generator.Passenger;
-import put.plane.boarding.simulator.passenger.SimulatorPassenger;
 import put.plane.boarding.simulator.passenger.PassengerBuilder;
+import put.plane.boarding.simulator.passenger.SimulatorPassenger;
+import put.plane.boarding.simulator.passenger.impl.DefaultPassenger;
 import put.plane.boarding.simulator.plane.Plane;
 import put.plane.boarding.simulator.plane.structure.Seat;
-import put.plane.boarding.simulator.passenger.impl.DefaultPassenger;
 import put.plane.boarding.simulator.problem.PassengerGroup;
 
 import java.util.Arrays;
@@ -21,7 +21,8 @@ public class PassengerFactory {
 
     /**
      * Maps {@link Passenger} to {@link SimulatorPassenger}, and then groups them using {@link PassengerGroup}
-     * @param plane - plane for passengers {@link Plane}
+     *
+     * @param plane         - plane for passengers {@link Plane}
      * @param passengerList - list of lists of passengers
      * @return list of {@link PassengerGroup}, made of passengers from respective lists
      */
@@ -54,7 +55,7 @@ public class PassengerFactory {
         List<Integer> positions = Arrays.stream(passengerLocation.split("_"))
                 .map(Integer::parseInt)
                 .toList();
-        return new Seat(positions.get(0)-1, plane.getFiles().get(positions.get(1)-1));
+        return new Seat(positions.get(0) - 1, plane.getFiles().get(positions.get(1) - 1));
     }
 
     private static int extractBaggageLocation(Passenger passenger) {
