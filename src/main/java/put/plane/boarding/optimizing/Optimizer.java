@@ -149,6 +149,7 @@ public class Optimizer {
 
             allGroups.add(group1);
             allGroups.add(group2);
+            Collections.reverse(allGroups);
 
         }
 
@@ -161,14 +162,14 @@ public class Optimizer {
 
         List<List<Integer>> allGroups = new ArrayList<>();
 
-        for (int i = 0;i<numRows;i++){
+        for (int i = 0; i < numRows; i++) {
             List<Integer> group = new ArrayList<>();
-            for (int j = 0;j<generatedPassengers.size();j++){
+            for (int j = 0; j < generatedPassengers.size(); j++) {
                 Passenger passenger = generatedPassengers.get(j);
                 String seatLocation = passenger.getSeatLocation();
                 String[] parts = seatLocation.split("_");
                 int row = Integer.parseInt(parts[0]);
-                if (row == i+1){
+                if (row == i + 1) {
                     group.add(j);
                 }
             }
@@ -183,14 +184,14 @@ public class Optimizer {
         int numRows = plane.getRows();
 
         List<List<Integer>> allGroups = new ArrayList<>();
-        for (int i = numRows-1;i>=0;i--){
+        for (int i = numRows - 1; i >= 0; i--) {
             List<Integer> group = new ArrayList<>();
-            for (int j = 0;j<generatedPassengers.size();j++){
+            for (int j = 0; j < generatedPassengers.size(); j++) {
                 Passenger passenger = generatedPassengers.get(j);
                 String seatLocation = passenger.getSeatLocation();
                 String[] parts = seatLocation.split("_");
                 int row = Integer.parseInt(parts[0]);
-                if (row == i+1){
+                if (row == i + 1) {
                     group.add(j);
                 }
             }
@@ -254,10 +255,6 @@ public class Optimizer {
                         .map(generatedPassengers::get)
                         .toList())
                 .collect(Collectors.toCollection(ArrayList::new));
-
-        if ("Zigzag".equals(methodName)) {
-            Collections.reverse(mappedPassengers);
-        }
 
         int time = getTimeForOrder(plane, mappedPassengers, methodName);
 
