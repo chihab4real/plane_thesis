@@ -17,14 +17,18 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static put.plane.boarding.simulator.plane.PlaneConstants.EXIT_FROM_PLANE;
 
 @Service
 @RequiredArgsConstructor
 public final class Simulator {
+    private static final Logger log = LoggerFactory.getLogger(Simulator.class);
+
 
     public SimulatorResponse simulate(SimulatorRequest request) {
-
         DeplainingProblem problem = request.getProblem();
         Plane plane = problem.getPlane();
         Queue queue = plane.getQueue();
@@ -32,32 +36,32 @@ public final class Simulator {
         int resultTime = 0;
         List<SingleFrame> visualizationFrames = new ArrayList<>();
 
-        List<SimulatorPassenger> remainingPassengers = passengerGroups
+        // Get ALL passengers from ALL groups at once (same as simulateWithoutVisualization)
+        List<SimulatorPassenger> allPassengers = passengerGroups
                 .stream()
                 .map(PassengerGroup::getPassengers)
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
 
-        for (PassengerGroup passengerGroup : passengerGroups) {
-            List<SimulatorPassenger> passengers = passengerGroup.getPassengers();
-            remainingPassengers.removeAll(passengers);
-            while (!passengers.isEmpty()) {
-                passengers.forEach(passenger -> {
-                    if (!passenger.isDuringAction()) {
-                        chooseNextAction(passenger, plane, queue);
-                    }
-                    if (passenger.isDuringAction()) {
-                        executePassengerAction(passenger, queue);
-                    }
-                });
-                passengers = passengers.stream()
-                        .filter(SimulatorPassenger::isOnPlane)
-                        .toList();
-                List<SimulatorPassenger> passengersForFrames = new ArrayList<>(passengers);
-                passengersForFrames.addAll(remainingPassengers);
-                savePassengerFrames(passengersForFrames, queue, visualizationFrames);
-                resultTime++;
-            }
+        // Process ALL passengers together each tick
+        while (!allPassengers.isEmpty()) {
+            allPassengers.forEach(passenger -> {
+                if (!passenger.isDuringAction()) {
+                    chooseNextAction(passenger, plane, queue);
+                }
+                if (passenger.isDuringAction()) {
+                    executePassengerAction(passenger, queue);
+                }
+            });
+
+            // Remove passengers who have left the plane
+            allPassengers = allPassengers.stream()
+                    .filter(SimulatorPassenger::isOnPlane)
+                    .toList();
+
+            // Save visualization frame
+            savePassengerFrames(allPassengers, queue, visualizationFrames);
+            resultTime++;
         }
 
         return SimulatorResponse.builder()
@@ -65,6 +69,7 @@ public final class Simulator {
                 .visualizationDto(new VisualizationDto(plane, visualizationFrames))
                 .build();
     }
+
 
     private static void savePassengerFrames(List<SimulatorPassenger> passengers, Queue queue, List<SingleFrame> visualizationFrames) {
         List<SinglePassenger> frame = new ArrayList<>();
@@ -99,5 +104,54 @@ public final class Simulator {
                 queue.lockSpot(passenger, action.getLocation());
             }
         });
+    }
+
+    public SimulatorResponse simulateWithoutVisualization(SimulatorRequest request) {
+        DeplainingProblem problem = request.getProblem();
+        Plane plane = problem.getPlane();
+        Queue queue = plane.getQueue();
+        List<PassengerGroup> passengerGroups = new ArrayList<>(problem.getPassengers());
+        int resultTime = 0;
+        final int MAX_TICKS = 10000;
+
+        // Get ALL passengers from ALL groups at once (not sequentially!)
+        List<SimulatorPassenger> allPassengers = passengerGroups
+                .stream()
+                .map(PassengerGroup::getPassengers)
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+
+        // Process ALL passengers together each tick
+        while (!allPassengers.isEmpty()) {
+            if (resultTime > MAX_TICKS) {
+                log.error("Stuck at {} ticks with {} passengers", resultTime, allPassengers.size());
+                throw new RuntimeException("Simulation exceeded maximum ticks - possible infinite loop!");
+            }
+
+            allPassengers.forEach(passenger -> {
+                if (!passenger.isDuringAction()) {
+                    chooseNextAction(passenger, plane, queue);
+                }
+                if (passenger.isDuringAction()) {
+                    executePassengerAction(passenger, queue);
+                }
+            });
+
+            // Remove passengers who have left the plane
+            allPassengers = allPassengers.stream()
+                    .filter(SimulatorPassenger::isOnPlane)
+                    .toList();
+
+            resultTime++;
+
+            if (resultTime % 100 == 0) {
+                log.debug("Tick {}: {} passengers remaining", resultTime, allPassengers.size());
+            }
+        }
+
+        return SimulatorResponse.builder()
+                .time(resultTime)
+                .visualizationDto(new VisualizationDto(plane, new ArrayList<>()))
+                .build();
     }
 }
