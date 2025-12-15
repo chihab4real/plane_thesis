@@ -47,7 +47,7 @@ public class Application {
 
         List<List<Passenger>> allPassengers = new ArrayList<>();
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 1; i++) {
             List<Passenger> generatedPassengers = PassengerGenerator.generatePassengers(
                     plane.getRows(),
                     plane.getColumns(),
@@ -61,14 +61,14 @@ public class Application {
         log.info("Random\n\n");
         // Checking random combinations
         OptimizerResult randResult = optimizer.randomOptimizationBatch(
-                1, true, plane, allPassengers);
+                1, true, plane, allPassengers, 4);
         float bestTime = randResult.bestTime();
         List<Integer> bestOrder = randResult.bestSolution();
 
         log.info("Swapping pairs\n\n");
         // Swapping pairs, only if the time is improved
         OptimizerResult swapResult = optimizer.pairSwapOptimizationBatch(
-                0, 1000, true, plane, allPassengers);
+                0, 1000, true, plane, allPassengers, 1);
         if (swapResult.bestTime() < bestTime) {
             bestTime = swapResult.bestTime();
             bestOrder = swapResult.bestSolution();
@@ -78,7 +78,7 @@ public class Application {
         log.info("Best time from pair swap: {}\n\n", swapResult);
         log.info("Best time found: {}\nBest order found:\n{}", bestTime, bestOrder);
 
-        SimulatorResponse response = optimizer.simulateForOrder(bestOrder, plane, allPassengers.get(0));
+        SimulatorResponse response = optimizer.simulateForOrder(bestOrder, plane, allPassengers.get(0), 1);
         xmlService.saveVisualization(response.visualizationDto());
     }
 }

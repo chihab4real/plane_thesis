@@ -28,10 +28,10 @@ public class Optimizer {
 
     private final Simulator simulator;
 
-    public OptimizerResult randomOptimization(int numRepetitions, boolean logs, Plane plane, List<Passenger> passengers) {
-        return randomOptimizationBatch(numRepetitions, logs, plane, List.of(passengers));
+    public OptimizerResult randomOptimization(int numRepetitions, boolean logs, Plane plane, List<Passenger> passengers, int numGroups) {
+        return randomOptimizationBatch(numRepetitions, logs, plane, List.of(passengers), numGroups);
     }
-    public OptimizerResult randomOptimizationBatch(int numRepetitions, boolean logs, Plane plane, List<List<Passenger>> passengers) {
+    public OptimizerResult randomOptimizationBatch(int numRepetitions, boolean logs, Plane plane, List<List<Passenger>> passengers, int numGroups) {
         List<Integer> order = IntStream.range(0, plane.getColumns() * plane.getRows()).boxed().collect(Collectors.toList());
 
         float bestTime = Float.MAX_VALUE;
@@ -40,7 +40,7 @@ public class Optimizer {
         for (int i = 0; i < numRepetitions; i++) {
             Collections.shuffle(order);
 
-            float time = getTimeForOrders(order, plane, passengers);
+            float time = getTimeForOrders(order, plane, passengers, numGroups);
 
             if (time < bestTime) {
                 bestTime = time;
@@ -55,11 +55,11 @@ public class Optimizer {
         return new OptimizerResult(bestTime, bestOrder);
     }
 
-    public OptimizerResult pairSwapOptimization(int numRepetitions, int noChangeLimit, boolean logs, Plane plane, List<Passenger> passengers) {
-        return pairSwapOptimizationBatch(numRepetitions, noChangeLimit, logs, plane, List.of(passengers));
+    public OptimizerResult pairSwapOptimization(int numRepetitions, int noChangeLimit, boolean logs, Plane plane, List<Passenger> passengers, int numGroups) {
+        return pairSwapOptimizationBatch(numRepetitions, noChangeLimit, logs, plane, List.of(passengers), numGroups);
     }
 
-    public OptimizerResult pairSwapOptimizationBatch(int numRepetitions, int noChangeLimit, boolean logs, Plane plane, List<List<Passenger>> passengers) {
+    public OptimizerResult pairSwapOptimizationBatch(int numRepetitions, int noChangeLimit, boolean logs, Plane plane, List<List<Passenger>> passengers, int numGroups) {
         List<Integer> order = IntStream.range(0, plane.getColumns() * plane.getRows()).boxed().collect(Collectors.toList());
 
         float bestTime = Float.MAX_VALUE;
@@ -68,12 +68,12 @@ public class Optimizer {
         List<Integer> lastOrder = new ArrayList<>(order);
         List<Integer> bestOrder = new ArrayList<>(lastOrder);
         Collections.copy(lastOrder, order);
-        float lastTime = getTimeForOrders(lastOrder, plane, passengers);
+        float lastTime = getTimeForOrders(lastOrder, plane, passengers, numGroups);
 
         int noChange = 0;
         for (int i = 0; i < numRepetitions; i++) {
             order = swapTwoRand(lastOrder);
-            float time = getTimeForOrders(order, plane, passengers);
+            float time = getTimeForOrders(order, plane, passengers, numGroups);
 
             if (time < lastTime) {
                 Collections.copy(lastOrder, order);
@@ -95,7 +95,7 @@ public class Optimizer {
                     noChange = 0;
 
                     Collections.shuffle(lastOrder);
-                    lastTime = getTimeForOrders(lastOrder, plane, passengers);
+                    lastTime = getTimeForOrders(lastOrder, plane, passengers, numGroups);
                     if (logs) {
                         log.info("Started from random point\nTIME({}): {}\nORDER: {}", i, lastTime, lastOrder);
                     }
@@ -106,8 +106,8 @@ public class Optimizer {
         return new OptimizerResult(bestTime, bestOrder);
     }
 
-    public SimulatorResponse simulateForOrder(List<Integer> order, Plane plane, List<Passenger> generatedPassengers) {
-        List<List<Passenger>> passengers = GroupUtils.singleGroup(permute(generatedPassengers, order));
+    public SimulatorResponse simulateForOrder(List<Integer> order, Plane plane, List<Passenger> generatedPassengers, int numGroups) {
+        List<List<Passenger>> passengers = splitIntoN(permute(generatedPassengers, order), numGroups);
         List<PassengerGroup> currPassengers = PassengerFactory.createSimulatorPassengers(plane, passengers);
         plane.boardPassengers(currPassengers);
 
@@ -120,15 +120,15 @@ public class Optimizer {
         return simulator.simulate(request);
     }
 
-    private float getTimeForOrder(List<Integer> order, Plane plane, List<Passenger> passengers) {
-        return getTimeForOrders(order, plane, List.of(passengers));
+    private float getTimeForOrder(List<Integer> order, Plane plane, List<Passenger> passengers, int numGroups) {
+        return getTimeForOrders(order, plane, List.of(passengers), numGroups);
     }
 
-    private float getTimeForOrders(List<Integer> order, Plane plane, List<List<Passenger>> passengersLists) {
+    private float getTimeForOrders(List<Integer> order, Plane plane, List<List<Passenger>> passengersLists, int numGroups) {
         float timeSum = 0;
 
         for(List<Passenger> generatedPassengers: passengersLists) {
-            SimulatorResponse response = simulateForOrder(order, plane, generatedPassengers);
+            SimulatorResponse response = simulateForOrder(order, plane, generatedPassengers, numGroups);
 
             timeSum += response.time();
         }
@@ -157,6 +157,23 @@ public class Optimizer {
         result.set(toSwap[0], original.get(toSwap[1]));
         result.set(toSwap[1], original.get(toSwap[0]));
 
+        return result;
+    }
+
+    private static <T> List<List<T>> splitIntoN(List<T> list, int n) {
+        int total = list.size();
+        int baseSize = total / n;
+        int remainder = total % n;
+
+        List<List<T>> result = new ArrayList<>(n);
+        int index = 0;
+
+        for (int i = 0; i < n; i++) {
+            int size = baseSize + (i < remainder ? 1 : 0);
+            int end = index + size;
+            result.add(list.subList(index, end));
+            index = end;
+        }
         return result;
     }
 }

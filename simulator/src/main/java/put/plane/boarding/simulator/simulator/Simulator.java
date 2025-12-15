@@ -15,6 +15,7 @@ import put.plane.boarding.simulator.simulator.frame.dto.VisualizationDto;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static put.plane.boarding.simulator.plane.PlaneConstants.EXIT_FROM_PLANE;
 
@@ -31,20 +32,52 @@ public final class Simulator {
         int resultTime = 0;
         List<SingleFrame> visualizationFrames = new ArrayList<>();
 
-        for (PassengerGroup passengerGroup : passengerGroups) {
-            List<SimulatorPassenger> passengers = passengerGroup.getPassengers();
+//        for (PassengerGroup passengerGroup : passengerGroups) {
+//            List<SimulatorPassenger> passengers = passengerGroup.getPassengers();
+//            while (!passengers.isEmpty()) {
+//                boolean free = false;
+//
+//                passengers.forEach(passenger -> {
+//                    if (!passenger.isDuringAction()) {
+//                        chooseNextAction(passenger, plane, queue);
+//                    }
+//                    if (passenger.isDuringAction()) {
+//                        executePassengerAction(passenger, queue);
+//                    }
+//                });
+//                passengers = passengers.stream()
+//                        .filter(SimulatorPassenger::isOnPlane)
+//                        .toList();
+//                savePassengerFrames(passengers, queue, visualizationFrames);
+//                resultTime++;
+//            }
+//        }
+
+        for (int groupIndex = 0; groupIndex < passengerGroups.size(); groupIndex++) {
+            List<SimulatorPassenger> passengers = new ArrayList<>(passengerGroups.get(groupIndex).getPassengers());
+
             while (!passengers.isEmpty()) {
-                passengers.forEach(passenger -> {
+                boolean free = false;
+
+                for (SimulatorPassenger passenger : passengers) {
                     if (!passenger.isDuringAction()) {
-                        chooseNextAction(passenger, plane, queue);
+                        free = free || chooseNextAction(passenger, plane, queue);
                     }
                     if (passenger.isDuringAction()) {
                         executePassengerAction(passenger, queue);
+                        free = true;
                     }
-                });
+                }
+
+                if (!free) {
+                    groupIndex++;
+                    passengers.addAll(passengerGroups.get(groupIndex).getPassengers());
+                    resultTime += 3;
+                }
+
                 passengers = passengers.stream()
                         .filter(SimulatorPassenger::isOnPlane)
-                        .toList();
+                        .collect(Collectors.toCollection(ArrayList::new));
                 savePassengerFrames(passengers, queue, visualizationFrames);
                 resultTime++;
             }
@@ -81,13 +114,16 @@ public final class Simulator {
         }
     }
 
-    private void chooseNextAction(SimulatorPassenger passenger, Plane plane, Queue queue) {
+    private boolean chooseNextAction(SimulatorPassenger passenger, Plane plane, Queue queue) {
         Optional<Action> nextAction = passenger.chooseAction(plane);
+
         nextAction.ifPresent(action -> {
             passenger.setAction(action);
             if (action.getLocation() != queue.findPassenger(passenger)) {
                 queue.lockSpot(passenger, action.getLocation());
             }
         });
+
+        return nextAction.isPresent();
     }
 }
