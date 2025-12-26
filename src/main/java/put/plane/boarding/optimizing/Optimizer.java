@@ -24,24 +24,15 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class Optimizer implements OptimizerInterface{
+public abstract class Optimizer implements OptimizerInterface{
 
     final Simulator simulator;
     final XMLService xmlservice;
     final PlaneFactory planeFactory;
 
 
-    protected List<Passenger> generatePassengers(Plane plane) {
-        return PassengerGenerator.generatePassengers(
-                plane.getRows(),
-                plane.getColumns(),
-                plane.getRows() * plane.getColumns(),
-                0
-        );
-    }
-
     @Override
-    public OptimizerResult runOptimization(Plane plane, boolean logs, String methodName, String description,
+    public OptimizerResult runOptimization(Plane plane, boolean logs,String path, String methodName, String description,
                                            List<List<Integer>> allGroups, List<Passenger> generatedPassengers,
                                            boolean saveVisualization) {
         List<List<Passenger>> mappedPassengers = allGroups
@@ -52,7 +43,7 @@ public class Optimizer implements OptimizerInterface{
                         .toList())
                 .collect(Collectors.toCollection(ArrayList::new));
 
-        int time = getTimeForOrder(plane, mappedPassengers, methodName, true);
+        int time = getTimeForOrder(plane, mappedPassengers, path, methodName, true);
 
         if (logs) {
             log.info(description);
@@ -67,12 +58,10 @@ public class Optimizer implements OptimizerInterface{
     }
 
     @Override
-    public OptimizerResult run(Plane plane, boolean logs) {
-        return null;
-    }
+    public abstract OptimizerResult run(Plane plane, List<Passenger> generatedPassengers, String path, boolean logs);
 
     @Override
-    public int getTimeForOrder(Plane plane, List<List<Passenger>> passengers, String methodName, boolean saveVisualization) {
+    public int getTimeForOrder(Plane plane, List<List<Passenger>> passengers, String path, String methodName, boolean saveVisualization) {
         Plane freshPlane = planeFactory.create(plane.getRows(), plane.getColumns());
 
         List<PassengerGroup> currPassengers = PassengerFactory.createSimulatorPassengers(freshPlane, passengers);
@@ -84,11 +73,11 @@ public class Optimizer implements OptimizerInterface{
                 .build();
 
         SimulatorRequest request = new SimulatorRequest(problem);
-        SimulatorResponse response = simulator.simulate(request);
+        SimulatorResponse response;
 
         if (saveVisualization) {
             response = simulator.simulate(request);
-            xmlservice.saveVisualization(response.visualizationDto(), methodName);
+            xmlservice.saveVisualization(response.visualizationDto(), path, methodName);
         } else {
             response = simulator.simulateWithoutVisualization(request);
         }

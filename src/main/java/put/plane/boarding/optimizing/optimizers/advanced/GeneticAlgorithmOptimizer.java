@@ -20,8 +20,7 @@ public class GeneticAlgorithmOptimizer extends AdvancedOptimizer {
         super(simulator, xmlservice, planeFactory);
     }
 
-    public OptimizerResult run(boolean logs, Plane plane, int populationSize, int generations, double mutationRate, double crossoverRate) {
-        List<Passenger> generatedPassengers = generatePassengers(plane);
+    public OptimizerResult run(boolean logs, Plane plane, List<Passenger> generatedPassengers,String path, int populationSize, int generations, double mutationRate, double crossoverRate) {
         int totalPassengers = generatedPassengers.size();
 
         if (logs) {
@@ -115,7 +114,7 @@ public class GeneticAlgorithmOptimizer extends AdvancedOptimizer {
         }
 
         // SAVE VISUALIZATION for the best solution only
-        return runOptimization(plane, logs, "GeneticAlgorithm",
+        return runOptimization(plane, logs, path,"GeneticAlgorithm",
                 "Genetic Algorithm Optimization", bestSolution, generatedPassengers, true);
     }
 

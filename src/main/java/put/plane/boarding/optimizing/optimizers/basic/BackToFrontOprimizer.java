@@ -17,8 +17,7 @@ public class BackToFrontOprimizer extends Optimizer {
     }
 
     @Override
-    public OptimizerResult run(Plane plane, boolean logs) {
-        List<Passenger> generatedPassengers = generatePassengers(plane);
+    public OptimizerResult run(Plane plane, List<Passenger> generatedPassengers, String path, boolean logs) {
         int numRows = plane.getRows();
 
         List<List<Integer>> allGroups = new ArrayList<>();
@@ -35,7 +34,7 @@ public class BackToFrontOprimizer extends Optimizer {
             }
             allGroups.add(group);
         }
-        return runOptimization(plane, logs, "BackToFront",
+        return runOptimization(plane, logs, path,"BackToFront",
                 "BackToFront Optimization (Row by row from back to front)",
                 allGroups, generatedPassengers, true);
     }

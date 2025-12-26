@@ -16,14 +16,13 @@ import java.util.List;
 
 @Slf4j
 @Service
-public class FrontToBackOptimizer extends Optimizer implements OptimizerInterface {
+public class FrontToBackOptimizer extends Optimizer{
     public FrontToBackOptimizer(Simulator simulator, XMLService xmlservice, PlaneFactory planeFactory) {
         super(simulator, xmlservice, planeFactory);
     }
 
     @Override
-    public OptimizerResult run(Plane plane, boolean logs) {
-        List<Passenger> generatedPassengers = generatePassengers(plane);
+    public OptimizerResult run(Plane plane,List<Passenger> generatedPassengers, String path, boolean logs) {
         int numRows = plane.getRows();
 
         List<List<Integer>> allGroups = new ArrayList<>();
@@ -42,6 +41,6 @@ public class FrontToBackOptimizer extends Optimizer implements OptimizerInterfac
             allGroups.add(group);
         }
 
-        return runOptimization(plane, logs, "FrontToBack", "FrontToBack Optimization (Row by row from front to back)", allGroups, generatedPassengers,true);
+        return runOptimization(plane, logs, path, "FrontToBack", "FrontToBack Optimization (Row by row from front to back)", allGroups, generatedPassengers,true);
     }
 }

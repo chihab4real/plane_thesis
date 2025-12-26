@@ -25,7 +25,7 @@ public class AdvancedOptimizer extends Optimizer{
     }
 
     @Override
-    public OptimizerResult runOptimization(Plane plane, boolean logs, String methodName, String description,
+    public OptimizerResult runOptimization(Plane plane, boolean logs, String path, String methodName, String description,
                                            List<List<Integer>> allGroups, List<Passenger> generatedPassengers,
                                            boolean saveVisualization) {
         List<List<Passenger>> mappedPassengers = allGroups
@@ -37,7 +37,7 @@ public class AdvancedOptimizer extends Optimizer{
                 .collect(Collectors.toCollection(ArrayList::new));
 
 
-        int time = getTimeForOrder(plane, mappedPassengers, methodName, saveVisualization);
+        int time = getTimeForOrder(plane, mappedPassengers,path, methodName, saveVisualization);
 
         if (logs) {
             log.info(description);
@@ -53,6 +53,11 @@ public class AdvancedOptimizer extends Optimizer{
                 .collect(Collectors.toList());
 
         return new OptimizerResult(time, flattenedSolution);
+    }
+
+    @Override
+    public OptimizerResult run(Plane plane, List<Passenger> generatedPassengers,String path, boolean logs) {
+        return null;
     }
 
     protected boolean isValidIndividual(List<List<Integer>> individual, int totalPassengers) {

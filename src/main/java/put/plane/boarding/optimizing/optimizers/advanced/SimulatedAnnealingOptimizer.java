@@ -21,9 +21,8 @@ public class SimulatedAnnealingOptimizer extends AdvancedOptimizer {
         super(simulator, xmlservice, planeFactory);
     }
 
-    public OptimizerResult run(boolean logs, Plane plane, double initialTemp, double coolingRate,
+    public OptimizerResult run(boolean logs, Plane plane, List<Passenger> generatedPassengers,String path, double initialTemp, double coolingRate,
                                int maxIterations) {
-        List<Passenger> generatedPassengers = generatePassengers(plane);
         int totalPassengers = generatedPassengers.size();
 
         if (logs) {
@@ -114,12 +113,12 @@ public class SimulatedAnnealingOptimizer extends AdvancedOptimizer {
         }
 
         // Save visualization for best solution
-        return runOptimization(plane, logs, "SimulatedAnnealing",
+        return runOptimization(plane, logs, path, "SimulatedAnnealing",
                 "Simulated Annealing Optimization", bestSolution, generatedPassengers, true);
     }
 
     @Override
-    public OptimizerResult runOptimization(Plane plane, boolean logs, String methodName, String description,
+    public OptimizerResult runOptimization(Plane plane, boolean logs,String path, String methodName, String description,
                                             List<List<Integer>> allGroups, List<Passenger> generatedPassengers,
                                             boolean saveVisualization) {
         List<List<Passenger>> mappedPassengers = allGroups
@@ -134,7 +133,7 @@ public class SimulatedAnnealingOptimizer extends AdvancedOptimizer {
             Collections.reverse(mappedPassengers);
         }
 
-        int time = getTimeForOrder(plane, mappedPassengers, methodName, saveVisualization);
+        int time = getTimeForOrder(plane, mappedPassengers, path, methodName, saveVisualization);
 
         if (logs) {
             log.info(description);

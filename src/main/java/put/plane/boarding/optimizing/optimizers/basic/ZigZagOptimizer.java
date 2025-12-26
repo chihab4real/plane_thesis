@@ -22,8 +22,7 @@ public class ZigZagOptimizer extends Optimizer {
     }
 
     @Override
-    public OptimizerResult run(Plane plane, boolean logs) {
-        List<Passenger> generatedPassengers = generatePassengers(plane);
+    public OptimizerResult run(Plane plane,List<Passenger> generatedPassengers, String path, boolean logs) {
         int numColumns = plane.getColumns();
         int columnsPerSide = numColumns / 2;
 
@@ -73,7 +72,7 @@ public class ZigZagOptimizer extends Optimizer {
 
         }
 
-        return runOptimization(plane, logs, "Zigzag",
+        return runOptimization(plane, logs, path,"Zigzag",
                 "Zigzag Optimization (Iterative alternating sides)", allGroups,
                 generatedPassengers,true);
     }

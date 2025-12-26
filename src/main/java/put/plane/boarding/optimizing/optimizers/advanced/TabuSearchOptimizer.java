@@ -21,9 +21,8 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
         super(simulator, xmlservice, planeFactory);
     }
 
-    public OptimizerResult run(boolean logs, Plane plane, int maxIterations, int tabuTenure,
+    public OptimizerResult run(boolean logs, Plane plane, List<Passenger> generatedPassengers, String path, int maxIterations, int tabuTenure,
                                int neighborhoodSize) {
-        List<Passenger> generatedPassengers = generatePassengers(plane);
         int totalPassengers = generatedPassengers.size();
 
         if (logs) {
@@ -158,7 +157,7 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
             log.info("Running final simulation WITH visualization...");
         }
 
-        return runOptimization(plane, logs, "TabuSearch",
+        return runOptimization(plane, logs, path, "TabuSearch",
                 "Tabu Search Optimization", bestSolution, generatedPassengers, true);
     }
 
@@ -176,7 +175,7 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
     }
 
     @Override
-    public OptimizerResult runOptimization(Plane plane, boolean logs, String methodName, String description,
+    public OptimizerResult runOptimization(Plane plane, boolean logs,String path, String methodName, String description,
                                             List<List<Integer>> allGroups, List<Passenger> generatedPassengers,
                                             boolean saveVisualization) {
         List<List<Passenger>> mappedPassengers = allGroups
@@ -191,7 +190,7 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
             Collections.reverse(mappedPassengers);
         }
 
-        int time = getTimeForOrder(plane, mappedPassengers, methodName, saveVisualization);
+        int time = getTimeForOrder(plane, mappedPassengers, path, methodName, saveVisualization);
 
         if (logs) {
             log.info(description);
