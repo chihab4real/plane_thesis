@@ -38,7 +38,8 @@ public final class Simulator {
                 .map(PassengerGroup::getPassengers)
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
-        savePassengerFrames(remainingPassengers, queue, visualizationFrames);
+        if (request.isSaveVisualization())
+            savePassengerFrames(remainingPassengers, queue, visualizationFrames);
         for (PassengerGroup passengerGroup : passengerGroups) {
             List<SimulatorPassenger> passengers = new ArrayList<>(passengerGroup.getPassengers());
             remainingPassengers.removeAll(passengers);
@@ -65,9 +66,11 @@ public final class Simulator {
                     passengersNotMoved.removeIf(passengersWhoMoved::contains);
                 }
                 passengers.removeIf(p -> !p.isOnPlane());
-                List<SimulatorPassenger> passengersForFrames = new ArrayList<>(passengers);
-                passengersForFrames.addAll(remainingPassengers);
-                savePassengerFrames(passengersForFrames, queue, visualizationFrames);
+                if (request.isSaveVisualization()) {
+                    List<SimulatorPassenger> passengersForFrames = new ArrayList<>(passengers);
+                    passengersForFrames.addAll(remainingPassengers);
+                    savePassengerFrames(passengersForFrames, queue, visualizationFrames);
+                }
                 resultTime++;
             }
         }

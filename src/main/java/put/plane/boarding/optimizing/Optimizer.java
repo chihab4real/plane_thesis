@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import put.plane.boarding.passengers.generator.Passenger;
-import put.plane.boarding.passengers.generator.PassengerGenerator;
 import put.plane.boarding.simulator.plane.Plane;
 import put.plane.boarding.simulator.plane.factory.PlaneFactory;
 import put.plane.boarding.simulator.problem.DeplainingProblem;
@@ -16,15 +15,13 @@ import put.plane.boarding.simulator.simulator.SimulatorResponse;
 import put.plane.boarding.simulator.simulator.frame.XMLService;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public abstract class Optimizer implements OptimizerInterface{
+public abstract class Optimizer implements OptimizerInterface {
 
     final Simulator simulator;
     final XMLService xmlservice;
@@ -32,7 +29,7 @@ public abstract class Optimizer implements OptimizerInterface{
 
 
     @Override
-    public OptimizerResult runOptimization(Plane plane, boolean logs,String path, String methodName, String description,
+    public OptimizerResult runOptimization(Plane plane, boolean logs, String path, String methodName, String description,
                                            List<List<Integer>> allGroups, List<Passenger> generatedPassengers,
                                            boolean saveVisualization) {
         List<List<Passenger>> mappedPassengers = allGroups
@@ -43,7 +40,7 @@ public abstract class Optimizer implements OptimizerInterface{
                         .toList())
                 .collect(Collectors.toCollection(ArrayList::new));
 
-        int time = getTimeForOrder(plane, mappedPassengers, path, methodName, true);
+        int time = getTimeForOrder(plane, mappedPassengers, path, methodName, false);
 
         if (logs) {
             log.info(description);
@@ -58,9 +55,6 @@ public abstract class Optimizer implements OptimizerInterface{
     }
 
     @Override
-    public abstract OptimizerResult run(Plane plane, List<Passenger> generatedPassengers, String path, boolean logs);
-
-    @Override
     public int getTimeForOrder(Plane plane, List<List<Passenger>> passengers, String path, String methodName, boolean saveVisualization) {
         Plane freshPlane = planeFactory.create(plane.getRows(), plane.getColumns());
 
@@ -73,13 +67,11 @@ public abstract class Optimizer implements OptimizerInterface{
                 .build();
 
         SimulatorRequest request = new SimulatorRequest(problem);
-        SimulatorResponse response;
+        request.setSaveVisualization(saveVisualization);
+        SimulatorResponse response = simulator.simulate(request);
 
         if (saveVisualization) {
-            response = simulator.simulate(request);
             xmlservice.saveVisualization(response.visualizationDto(), path, methodName);
-        } else {
-            response = simulator.simulateWithoutVisualization(request);
         }
 
         return response.time();

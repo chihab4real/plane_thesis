@@ -19,7 +19,7 @@ import java.util.Random;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class AdvancedOptimizer extends Optimizer{
+public class AdvancedOptimizer extends Optimizer {
     public AdvancedOptimizer(Simulator simulator, XMLService xmlservice, PlaneFactory planeFactory) {
         super(simulator, xmlservice, planeFactory);
     }
@@ -37,7 +37,7 @@ public class AdvancedOptimizer extends Optimizer{
                 .collect(Collectors.toCollection(ArrayList::new));
 
 
-        int time = getTimeForOrder(plane, mappedPassengers,path, methodName, saveVisualization);
+        int time = getTimeForOrder(plane, mappedPassengers, path, methodName, saveVisualization);
 
         if (logs) {
             log.info(description);
@@ -56,7 +56,7 @@ public class AdvancedOptimizer extends Optimizer{
     }
 
     @Override
-    public OptimizerResult run(Plane plane, List<Passenger> generatedPassengers,String path, boolean logs) {
+    public OptimizerResult run(Plane plane, List<Passenger> generatedPassengers, String path, boolean logs) {
         return null;
     }
 
@@ -105,7 +105,7 @@ public class AdvancedOptimizer extends Optimizer{
         long startTime = System.currentTimeMillis();
         log.info("Starting simulation...");
 
-        SimulatorResponse response = simulator.simulateWithoutVisualization(request);
+        SimulatorResponse response = simulator.simulate(request);
 
         long elapsed = System.currentTimeMillis() - startTime;
         log.info("Simulation completed: {} ticks in {} ms", response.time(), elapsed);
@@ -114,7 +114,7 @@ public class AdvancedOptimizer extends Optimizer{
     }
 
 
-     protected List<List<Integer>> deepCopyIndices(List<List<Integer>> original) {
+    protected List<List<Integer>> deepCopyIndices(List<List<Integer>> original) {
         return original.stream()
                 .map(ArrayList::new)
                 .collect(Collectors.toCollection(ArrayList::new));
@@ -189,8 +189,6 @@ public class AdvancedOptimizer extends Optimizer{
 
         return neighbor;
     }
-
-
 
 
 }
