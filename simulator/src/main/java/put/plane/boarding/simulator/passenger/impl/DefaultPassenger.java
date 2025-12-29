@@ -1,7 +1,5 @@
 package put.plane.boarding.simulator.passenger.impl;
 
-import lombok.RequiredArgsConstructor;
-import lombok.ToString;
 import put.plane.boarding.simulator.passenger.SimulatorPassenger;
 import put.plane.boarding.simulator.passenger.action.Action;
 import put.plane.boarding.simulator.plane.Plane;
@@ -14,7 +12,6 @@ import java.util.Optional;
 
 import static put.plane.boarding.simulator.plane.PlaneConstants.EXIT_FROM_PLANE;
 
-@ToString
 public class DefaultPassenger implements SimulatorPassenger {
 
     private Action action;
@@ -40,7 +37,12 @@ public class DefaultPassenger implements SimulatorPassenger {
 
         if (!isInQueue) {
             if (queue.isSpotAvailable(seat.row()) && passengersOnSeats.isPassengerInFrontSeat(this)) {
-                Action result = new Action(seat.row(), enteringDuration, () -> passengersOnSeats.onPassengerOffSeat(this));
+                Action result = new Action(
+                        seat.row(),
+                        enteringDuration,
+                        () -> passengersOnSeats.onPassengerOffSeat(this),
+                        () -> !queue.isSpotTaken(seat.row())
+                );
                 return Optional.of(result);
             }
             return Optional.empty();
@@ -48,11 +50,17 @@ public class DefaultPassenger implements SimulatorPassenger {
 
         int nextStep = queue.stepInDirection(this, EXIT_FROM_PLANE);
         if (queue.isSpotAvailable(nextStep)) {
-            Action result = new Action(nextStep, movingDuration, () -> {
-                if (nextStep == EXIT_FROM_PLANE) {
-                    onLeavePlane();
-                }
-            });
+            Action result = new Action(
+                    nextStep,
+                    movingDuration,
+                    () -> {
+                        queue.releaseSpot(this);
+                        if (nextStep == EXIT_FROM_PLANE) {
+                            onLeavePlane();
+                        }
+                    },
+                    () -> !queue.isSpotTaken(nextStep)
+            );
             return Optional.of(result);
         }
         return Optional.empty();
@@ -96,5 +104,13 @@ public class DefaultPassenger implements SimulatorPassenger {
     @Override
     public int hashCode() {
         return Objects.hashCode(seat);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof DefaultPassenger other) {
+            return seat.equals(other.seat);
+        }
+        return false;
     }
 }

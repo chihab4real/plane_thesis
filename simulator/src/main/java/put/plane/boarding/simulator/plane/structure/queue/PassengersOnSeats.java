@@ -1,6 +1,5 @@
 package put.plane.boarding.simulator.plane.structure.queue;
 
-import lombok.ToString;
 import put.plane.boarding.simulator.passenger.SimulatorPassenger;
 
 import java.util.HashMap;
@@ -8,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-@ToString
 public class PassengersOnSeats {
     private final Map<Integer, Set<SimulatorPassenger>> passengersOnSeatsByRows = new HashMap<>();
 

@@ -15,7 +15,7 @@ import put.plane.boarding.simulator.simulator.factory.TestPassengerFactory;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = SimulatorConfig.class)
@@ -71,7 +71,7 @@ class SimulatorTest {
                 .build();
         SimulatorRequest simulatorRequest = new SimulatorRequest(deplainingProblem);
         SimulatorResponse simulatorResponse = simulator.simulate(simulatorRequest);
-        assertEquals(10, simulatorResponse.time());
+        assertEquals(8, simulatorResponse.time());
     }
 
     @Test
@@ -86,9 +86,9 @@ class SimulatorTest {
                 passengerFactory.create(plane, 1, 1, 1, 1),
                 passengerFactory.create(plane, 1, 2, 2, 2),
                 passengerFactory.create(plane, 2, 1, 1, 1),
+                passengerFactory.create(plane, 2, 2, 2, 2),
                 passengerFactory.create(plane, 3, 1, 1, 1),
-                passengerFactory.create(plane, 3, 2, 2, 2),
-                passengerFactory.create(plane, 2, 2, 2, 2)
+                passengerFactory.create(plane, 3, 2, 2, 2)
         );
         List<PassengerGroup> passengerGroup = List.of(new PassengerGroup(passengers));
         plane.boardPassengers(passengerGroup);
@@ -99,7 +99,7 @@ class SimulatorTest {
                 .build();
         SimulatorRequest simulatorRequest = new SimulatorRequest(deplainingProblem);
         SimulatorResponse simulatorResponse = simulator.simulate(simulatorRequest);
-        assertEquals(20, simulatorResponse.time());
+        assertEquals(14, simulatorResponse.time());
     }
 
     @Test
@@ -149,6 +149,47 @@ class SimulatorTest {
         SimulatorRequest simulatorRequest = new SimulatorRequest(deplainingProblem);
         SimulatorResponse simulatorResponse = simulator.simulate(simulatorRequest);
 
-        assertEquals(14, simulatorResponse.time());
+        assertEquals(12, simulatorResponse.time());
+    }
+
+    @Test
+    void fullPlaneFastToSlow() {
+        int rows = 5;
+        int cols = 4;
+        Plane plane = planeFactory.create(rows, cols);
+
+        List<SimulatorPassenger> passengers = List.of(
+                passengerFactory.create(plane, 0, 0, 1, 1),
+                passengerFactory.create(plane, 0, 1, 1, 1),
+                passengerFactory.create(plane, 0, 2, 1, 1),
+                passengerFactory.create(plane, 0, 3, 1, 1),
+                passengerFactory.create(plane, 1, 0, 2, 2),
+                passengerFactory.create(plane, 1, 1, 2, 2),
+                passengerFactory.create(plane, 1, 2, 2, 2),
+                passengerFactory.create(plane, 1, 3, 2, 2),
+                passengerFactory.create(plane, 2, 0, 3, 3),
+                passengerFactory.create(plane, 2, 1, 3, 3),
+                passengerFactory.create(plane, 2, 2, 3, 3),
+                passengerFactory.create(plane, 2, 3, 3, 3),
+                passengerFactory.create(plane, 3, 0, 4, 4),
+                passengerFactory.create(plane, 3, 1, 4, 4),
+                passengerFactory.create(plane, 3, 2, 4, 4),
+                passengerFactory.create(plane, 3, 3, 4, 4),
+                passengerFactory.create(plane, 4, 0, 5, 5),
+                passengerFactory.create(plane, 4, 1, 5, 5),
+                passengerFactory.create(plane, 4, 2, 5, 5),
+                passengerFactory.create(plane, 4, 3, 5, 5)
+        );
+
+        List<PassengerGroup> passengerGroup = List.of(new PassengerGroup(passengers));
+        plane.boardPassengers(passengerGroup);
+
+        DeplainingProblem deplainingProblem = DeplainingProblem.builder()
+                .plane(plane)
+                .passengers(passengerGroup)
+                .build();
+        SimulatorRequest simulatorRequest = new SimulatorRequest(deplainingProblem);
+        SimulatorResponse simulatorResponse = simulator.simulate(simulatorRequest);
+        assertEquals(71, simulatorResponse.time());
     }
 }

@@ -4,7 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 import put.plane.boarding.simulator.passenger.SimulatorPassenger;
 
-import java.util.*;
+import java.util.List;
 
 @Data
 @Builder
@@ -15,8 +15,12 @@ public class Queue {
     private final List<SimulatorPassenger> queueLocks;
 
     public boolean isSpotAvailable(int position) {
-        return position < 0 ||
-                queueArray.get(position) == null && queueLocks.get(position) == null;
+        return position < 0
+                || queueLocks.get(position) == null && isPassengerDuringMovingOrNull(queueArray.get(position));
+    }
+
+    public boolean isSpotTaken(int position) {
+        return position >= 0 && queueArray.get(position) != null;
     }
 
     public void takeSpot(SimulatorPassenger passenger, int position) {
@@ -43,10 +47,19 @@ public class Queue {
 
     public int stepInDirection(SimulatorPassenger passenger, int targetLocation) {
         int passengerLocation = findPassenger(passenger);
-        return passengerLocation == targetLocation ?
-            passengerLocation : passengerLocation > targetLocation ?
+        if (passengerLocation == targetLocation)
+            return passengerLocation;
+        return passengerLocation > targetLocation ?
                 passengerLocation - 1 :
                 passengerLocation + 1;
+    }
 
+    public boolean isPassengerDuringMovingOrNull(SimulatorPassenger passenger) {
+        if (passenger == null)
+            return true;
+        if (passenger.toAction() == null)
+            return false;
+        int passengerLocation = findPassenger(passenger);
+        return passenger.toAction().getDirection().location() != passengerLocation;
     }
 }
