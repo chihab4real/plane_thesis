@@ -13,8 +13,10 @@ import put.plane.boarding.simulator.simulator.frame.dto.SinglePassenger;
 import put.plane.boarding.simulator.simulator.frame.dto.VisualizationDto;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static put.plane.boarding.simulator.plane.PlaneConstants.EXIT_FROM_PLANE;
@@ -37,22 +39,33 @@ public final class Simulator {
                 .map(PassengerGroup::getPassengers)
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
-
+        savePassengerFrames(remainingPassengers, queue, visualizationFrames);
         for (PassengerGroup passengerGroup : passengerGroups) {
-            List<SimulatorPassenger> passengers = passengerGroup.getPassengers();
+            List<SimulatorPassenger> passengers = new ArrayList<>(passengerGroup.getPassengers());
             remainingPassengers.removeAll(passengers);
             while (!passengers.isEmpty()) {
-                passengers.forEach(passenger -> {
-                    if (!passenger.isDuringAction()) {
-                        chooseNextAction(passenger, plane, queue);
-                    }
-                    if (passenger.isDuringAction()) {
-                        executePassengerAction(passenger, queue);
-                    }
-                });
-                passengers = passengers.stream()
-                        .filter(SimulatorPassenger::isOnPlane)
-                        .toList();
+                AtomicBoolean someCustomerHasMadeAction = new AtomicBoolean(true);
+                List<SimulatorPassenger> passengersNotMoved = new ArrayList<>(passengers);
+                passengersNotMoved.sort(Comparator.comparingInt(p -> {
+                    int position = queue.findPassenger(p);
+                    return position < 0 ? Integer.MAX_VALUE : position;
+                }));
+                while (someCustomerHasMadeAction.get()) {
+                    someCustomerHasMadeAction.set(false);
+                    List<SimulatorPassenger> passengersWhoMoved = new ArrayList<>();
+                    passengersNotMoved.forEach(passenger -> {
+                        if (!passenger.isDuringAction()) {
+                            possiblyCreatePassengerAction(plane, queue, passenger);
+                        }
+                        if (passenger.isDuringAction()) {
+                            passengersWhoMoved.add(passenger);
+                            someCustomerHasMadeAction.set(true);
+                            doPassengerAction(passenger, queue);
+                        }
+                    });
+                    passengersNotMoved.removeIf(passengersWhoMoved::contains);
+                }
+                passengers.removeIf(p -> !p.isOnPlane());
                 List<SimulatorPassenger> passengersForFrames = new ArrayList<>(passengers);
                 passengersForFrames.addAll(remainingPassengers);
                 savePassengerFrames(passengersForFrames, queue, visualizationFrames);
@@ -66,7 +79,29 @@ public final class Simulator {
                 .build();
     }
 
-    private static void savePassengerFrames(List<SimulatorPassenger> passengers, Queue queue, List<SingleFrame> visualizationFrames) {
+    private void doPassengerAction(SimulatorPassenger passenger, Queue queue) {
+        Action action = passenger.toAction();
+        if (action.isOver()) {
+            passenger.onActionComplete();
+            if (action.getLocation() != EXIT_FROM_PLANE) {
+                queue.takeSpot(passenger, action.getLocation());
+            }
+        } else {
+            action.makeProgress();
+        }
+    }
+
+    private void possiblyCreatePassengerAction(Plane plane, Queue queue, SimulatorPassenger passenger) {
+        Optional<Action> nextAction = passenger.chooseAction(plane);
+        nextAction.ifPresent(action -> {
+            passenger.setAction(action);
+            if (action.getLocation() != queue.findPassenger(passenger)) {
+                queue.lockSpot(passenger, action.getLocation());
+            }
+        });
+    }
+
+    private void savePassengerFrames(List<SimulatorPassenger> passengers, Queue queue, List<SingleFrame> visualizationFrames) {
         List<SinglePassenger> frame = new ArrayList<>();
         passengers.forEach(passenger -> {
             if (queue.findPassenger(passenger) != -1) {
@@ -76,28 +111,5 @@ public final class Simulator {
             }
         });
         visualizationFrames.add(new SingleFrame(frame));
-    }
-
-    private void executePassengerAction(SimulatorPassenger passenger, Queue queue) {
-        Action action = passenger.toAction();
-        if (action.isOver()) {
-            passenger.onActionComplete();
-            queue.releaseSpot(passenger);
-            if (action.getLocation() != EXIT_FROM_PLANE) {
-                queue.takeSpot(passenger, action.getLocation());
-            }
-        } else {
-            action.makeProgress();
-        }
-    }
-
-    private void chooseNextAction(SimulatorPassenger passenger, Plane plane, Queue queue) {
-        Optional<Action> nextAction = passenger.chooseAction(plane);
-        nextAction.ifPresent(action -> {
-            passenger.setAction(action);
-            if (action.getLocation() != queue.findPassenger(passenger)) {
-                queue.lockSpot(passenger, action.getLocation());
-            }
-        });
     }
 }
