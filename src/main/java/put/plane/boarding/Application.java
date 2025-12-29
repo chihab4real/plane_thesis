@@ -27,7 +27,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
 import java.util.List;
-import java.util.Random;
 
 @Slf4j
 @Service
@@ -35,7 +34,6 @@ import java.util.Random;
 public class Application {
 
     private final PlaneFactory planeFactory;
-    private final Random random;
     private final XMLService xmlService;
     private final List<Optimizer> basicOptimizers;
 
@@ -62,9 +60,9 @@ public class Application {
         basicOptimizers.add(new AisleMiddleWindowOptimizer(new Simulator(), xmlService, planeFactory));
 
         log.info("Running Basic Optimizers\n");
-        for(Optimizer optimizer : basicOptimizers){
+        for (Optimizer optimizer : basicOptimizers) {
             log.info("Running optimizer: {}\n", optimizer.getClass().getSimpleName());
-            OptimizerResult result = optimizer.run(plane, generatedPassengers,path,true);
+            OptimizerResult result = optimizer.run(plane, generatedPassengers, path, true);
             log.info("Result: {}\n\n", result);
         }
 
@@ -72,13 +70,13 @@ public class Application {
 
         log.info("Genetic Algorithm Optimization\n");
         GeneticAlgorithmOptimizer optimizer = new GeneticAlgorithmOptimizer(new Simulator(), xmlService, planeFactory);
-        OptimizerResult gaResult = optimizer.run(true, plane,generatedPassengers,path, 50, 20,
+        OptimizerResult gaResult = optimizer.run(true, plane, generatedPassengers, path, 50, 20,
                 0.2, 0.8);
         log.info("Best time from GA: {}\n\n", gaResult);
 
         log.info("Simulated Annealing Optimization\n");
         SimulatedAnnealingOptimizer saOptimizer = new SimulatedAnnealingOptimizer(new Simulator(), xmlService, planeFactory);
-        OptimizerResult saResult = saOptimizer.run(true, plane,generatedPassengers, path,100.0, 0.995, 1000);
+        OptimizerResult saResult = saOptimizer.run(true, plane, generatedPassengers, path, 100.0, 0.995, 1000);
         log.info("Best time from SA: {}\n\n", saResult);
 
         log.info("Tabu Search Optimization\n");
