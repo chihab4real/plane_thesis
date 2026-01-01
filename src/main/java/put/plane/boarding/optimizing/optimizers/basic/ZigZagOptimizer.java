@@ -29,7 +29,6 @@ public class ZigZagOptimizer extends Optimizer {
         List<List<Integer>> allGroups = new ArrayList<>();
 
         for (int iteration = 0; iteration < columnsPerSide; iteration++) {
-
             int leftColumn = iteration + 1;
             int rightColumn = numColumns - iteration;
 
@@ -51,30 +50,22 @@ public class ZigZagOptimizer extends Optimizer {
                 }
 
                 if (row % 2 == 1) {
-
-                    if (isRightIterationColumn) {
-                        group1.add(i);
-                    } else {
-                        group2.add(i);
-                    }
+                    if (isRightIterationColumn) group1.add(i);
+                    else group2.add(i);
                 } else {
-                    if (isLeftIterationColumn) {
-                        group1.add(i);
-                    } else {
-                        group2.add(i);
-                    }
+                    if (isLeftIterationColumn) group1.add(i);
+                    else group2.add(i);
                 }
             }
-
             allGroups.add(group1);
             allGroups.add(group2);
-            Collections.reverse(allGroups);
-
         }
 
-        return runOptimization(plane, logs, path,"Zigzag",
+        Collections.reverse(allGroups);
+
+        return runOptimization(plane, logs, path, "Zigzag",
                 "Zigzag Optimization (Iterative alternating sides)", allGroups,
-                generatedPassengers,true);
+                generatedPassengers, true);
     }
 
 
