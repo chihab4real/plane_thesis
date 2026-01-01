@@ -21,14 +21,12 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public abstract class Optimizer implements OptimizerInterface {
+public abstract class Optimizer {
 
     final Simulator simulator;
     final XMLService xmlservice;
     final PlaneFactory planeFactory;
 
-
-    @Override
     public OptimizerResult runOptimization(Plane plane, boolean logs, String path, String methodName, String description,
                                            List<List<Integer>> allGroups, List<Passenger> generatedPassengers,
                                            boolean saveVisualization) {
@@ -54,7 +52,6 @@ public abstract class Optimizer implements OptimizerInterface {
         return new OptimizerResult(time, new ArrayList<>());
     }
 
-    @Override
     public int getTimeForOrder(Plane plane, List<List<Passenger>> passengers, String path, String methodName, boolean saveVisualization) {
         Plane freshPlane = planeFactory.create(plane.getRows(), plane.getColumns());
 
@@ -76,5 +73,7 @@ public abstract class Optimizer implements OptimizerInterface {
 
         return response.time();
     }
+
+    public abstract OptimizerResult run(Plane plane,List<Passenger> generatedPassengers, String path, boolean logs);
 
 }
