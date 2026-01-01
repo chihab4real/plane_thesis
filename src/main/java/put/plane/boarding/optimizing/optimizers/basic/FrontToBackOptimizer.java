@@ -3,7 +3,6 @@ package put.plane.boarding.optimizing.optimizers.basic;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import put.plane.boarding.optimizing.Optimizer;
-import put.plane.boarding.optimizing.OptimizerInterface;
 import put.plane.boarding.optimizing.OptimizerResult;
 import put.plane.boarding.passengers.generator.Passenger;
 import put.plane.boarding.simulator.plane.Plane;
