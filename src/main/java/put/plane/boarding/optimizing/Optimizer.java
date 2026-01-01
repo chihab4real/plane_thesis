@@ -40,7 +40,7 @@ public abstract class Optimizer implements OptimizerInterface {
                         .toList())
                 .collect(Collectors.toCollection(ArrayList::new));
 
-        int time = getTimeForOrder(plane, mappedPassengers, path, methodName, false);
+        int time = getTimeForOrder(plane, mappedPassengers, path, methodName, true);
 
         if (logs) {
             log.info(description);
