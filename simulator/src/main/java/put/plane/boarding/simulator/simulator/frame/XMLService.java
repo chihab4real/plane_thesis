@@ -1,13 +1,10 @@
 package put.plane.boarding.simulator.simulator.frame;
 
 import lombok.SneakyThrows;
-import org.apache.commons.lang3.time.DateFormatUtils;
-import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import put.plane.boarding.passengers.generator.Passenger;
-import put.plane.boarding.simulator.problem.PassengerGroup;
 import put.plane.boarding.simulator.simulator.frame.dto.VisualizationDto;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -16,18 +13,16 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Date;
 import java.util.List;
 
 @Service
 public class XMLService {
 
     @SneakyThrows
-    public void saveVisualization(VisualizationDto dto, String path, String methodName) {
+    public void saveVisualization(VisualizationDto dto, String path, String fileName) {
 
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
@@ -73,7 +68,7 @@ public class XMLService {
         });
 
 
-        Path outputPath = Paths.get(path, methodName + ".xml");
+        Path outputPath = Paths.get(path, fileName + ".xml");
         Files.createDirectories(outputPath.getParent());
 
         Transformer transformer = TransformerFactory.newInstance().newTransformer();
