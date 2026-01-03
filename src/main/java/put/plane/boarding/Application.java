@@ -10,10 +10,7 @@ import put.plane.boarding.optimizing.OptimizerResult;
 import put.plane.boarding.optimizing.optimizers.advanced.GeneticAlgorithmOptimizer;
 import put.plane.boarding.optimizing.optimizers.advanced.SimulatedAnnealingOptimizer;
 import put.plane.boarding.optimizing.optimizers.advanced.TabuSearchOptimizer;
-import put.plane.boarding.optimizing.optimizers.basic.AisleMiddleWindowOptimizer;
-import put.plane.boarding.optimizing.optimizers.basic.BackToFrontOprimizer;
-import put.plane.boarding.optimizing.optimizers.basic.FrontToBackOptimizer;
-import put.plane.boarding.optimizing.optimizers.basic.ZigZagOptimizer;
+import put.plane.boarding.optimizing.optimizers.basic.*;
 import put.plane.boarding.passengers.generator.Passenger;
 import put.plane.boarding.passengers.generator.PassengerGenerator;
 import put.plane.boarding.simulator.plane.Plane;
@@ -55,8 +52,8 @@ public class Application {
         //List<Integer> order = IntStream.range(0, plane.getColumns() * plane.getRows()).boxed().collect(Collectors.toList());
 
         basicOptimizers.add(new ZigZagOptimizer(new Simulator(), xmlService, planeFactory));
-        basicOptimizers.add(new BackToFrontOprimizer(new Simulator(), xmlService, planeFactory));
-        basicOptimizers.add(new FrontToBackOptimizer(new Simulator(), xmlService, planeFactory));
+        basicOptimizers.add(new RowBasedOptimizer(new Simulator(), xmlService, planeFactory, true));
+        basicOptimizers.add(new RowBasedOptimizer(new Simulator(), xmlService, planeFactory, false));
         basicOptimizers.add(new AisleMiddleWindowOptimizer(new Simulator(), xmlService, planeFactory));
 
         log.info("Running Basic Optimizers\n");
