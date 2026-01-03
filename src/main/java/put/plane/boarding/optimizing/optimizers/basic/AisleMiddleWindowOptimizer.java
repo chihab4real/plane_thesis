@@ -33,7 +33,6 @@ public class AisleMiddleWindowOptimizer extends Optimizer {
                 Passenger passenger = generatedPassengers.get(i);
                 String seatLocation = passenger.getSeatLocation();
                 String[] parts = seatLocation.split("_");
-                int row = Integer.parseInt(parts[0]);
                 int column = Integer.parseInt(parts[1]);
 
                 if (column == leftColumn) {
