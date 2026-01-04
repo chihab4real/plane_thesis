@@ -43,13 +43,17 @@ public class PassengerGenerator {
         for (int i =0; i<numberPassengers;i++){
             String seat = assignedSeats.get(i);
             boolean hasLuggage = luggageSet.contains(i);
+            Integer speedQueue = rand.nextInt(1,2);
+            Integer speedExiting = rand.nextInt(2,3);
+            Integer luggagePickUpTime = hasLuggage ? rand.nextInt(1,2) : null;
 
             passengers.add(new Passenger(
                     seat,
-                    1,
-                    2,
+                    speedQueue,
+                    speedExiting,
                     hasLuggage,
-                    hasLuggage ? seat: null
+                    hasLuggage ? seat: null,
+                    luggagePickUpTime
             ));
         }
 
