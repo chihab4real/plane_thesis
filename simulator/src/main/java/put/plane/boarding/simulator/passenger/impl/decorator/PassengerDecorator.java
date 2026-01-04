@@ -55,14 +55,11 @@ public abstract class PassengerDecorator implements SimulatorPassenger {
         return passenger.hashCode();
     }
 
-//    @Override
-//    public boolean equals(Object obj) {
-//        if (obj instanceof PassengerDecorator passengerDecorator) {
-//            return passenger.equals(passengerDecorator);
-//        }
-//        if (obj instanceof SimulatorPassenger simulatorPassenger) {
-//            return passenger.equals(simulatorPassenger);
-//        }
-//        return super.equals(obj);
-//    }
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof SimulatorPassenger simulatorPassenger) {
+            return passenger.equals(simulatorPassenger);
+        }
+        return false;
+    }
 }

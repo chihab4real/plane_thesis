@@ -113,8 +113,8 @@ public class DefaultPassenger implements SimulatorPassenger {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof DefaultPassenger other) {
-            return seat.equals(other.seat);
+        if (obj instanceof SimulatorPassenger other) {
+            return seat.equals(other.seat());
         }
         return false;
     }
