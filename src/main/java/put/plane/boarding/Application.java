@@ -105,6 +105,7 @@ public class Application {
                 plane.getRows(),
                 plane.getColumns(),
                 plane.getRows() * plane.getColumns(),
+                0,
                 0
         );
     }
