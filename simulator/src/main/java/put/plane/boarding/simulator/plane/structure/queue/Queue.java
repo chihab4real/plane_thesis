@@ -19,18 +19,18 @@ public class Queue {
                 || queueLocks.get(position) == null && isPassengerDuringMovingOrNull(queueArray.get(position));
     }
 
-    public boolean isSpotTaken(int position) {
-        return position >= 0 && queueArray.get(position) != null;
+    public boolean isSpotFree(int position) {
+        return position < 0 || queueArray.get(position) == null;
     }
 
     public void takeSpot(SimulatorPassenger passenger, int position) {
-        queueArray.set(position, passenger);
+        queueArray.set(position, passenger.rootPassenger());
         queueLocks.set(position, null);
     }
 
     public void lockSpot(SimulatorPassenger passenger, int position) {
         if (position >= 0) {
-            queueLocks.set(position, passenger);
+            queueLocks.set(position, passenger.rootPassenger());
         }
     }
 
@@ -42,7 +42,7 @@ public class Queue {
     }
 
     public int findPassenger(SimulatorPassenger passenger) {
-        return queueArray.indexOf(passenger);
+        return queueArray.indexOf(passenger.rootPassenger());
     }
 
     public int stepInDirection(SimulatorPassenger passenger, int targetLocation) {
@@ -60,6 +60,10 @@ public class Queue {
         if (passenger.toAction() == null)
             return false;
         int passengerLocation = findPassenger(passenger);
-        return passenger.toAction().getDirection().location() != passengerLocation;
+        return passenger.toAction().getDirection() != passengerLocation;
+    }
+
+    public SimulatorPassenger getPassengerAt(int position) {
+        return queueArray.get(position);
     }
 }

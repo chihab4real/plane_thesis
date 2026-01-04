@@ -2,13 +2,13 @@ package put.plane.boarding.simulator.passenger.impl;
 
 import put.plane.boarding.simulator.passenger.SimulatorPassenger;
 import put.plane.boarding.simulator.passenger.action.Action;
+import put.plane.boarding.simulator.passenger.action.ActionResult;
 import put.plane.boarding.simulator.plane.Plane;
 import put.plane.boarding.simulator.plane.structure.Seat;
 import put.plane.boarding.simulator.plane.structure.queue.PassengersOnSeats;
 import put.plane.boarding.simulator.plane.structure.queue.Queue;
 
 import java.util.Objects;
-import java.util.Optional;
 
 import static put.plane.boarding.simulator.plane.PlaneConstants.EXIT_FROM_PLANE;
 
@@ -29,7 +29,7 @@ public class DefaultPassenger implements SimulatorPassenger {
     }
 
     @Override
-    public Optional<Action> chooseAction(Plane plane) {
+    public ActionResult chooseAction(Plane plane) {
         Queue queue = plane.getQueue();
         PassengersOnSeats passengersOnSeats = plane.getPassengersOnSeats();
         int positionInQueue = queue.findPassenger(this);
@@ -41,11 +41,11 @@ public class DefaultPassenger implements SimulatorPassenger {
                         seat.row(),
                         enteringDuration,
                         () -> passengersOnSeats.onPassengerOffSeat(this),
-                        () -> !queue.isSpotTaken(seat.row())
+                        () -> queue.isSpotFree(seat.row())
                 );
-                return Optional.of(result);
+                return ActionResult.nonBlockedAction(result);
             }
-            return Optional.empty();
+            return ActionResult.blockedAction(seat.row());
         }
 
         int nextStep = queue.stepInDirection(this, EXIT_FROM_PLANE);
@@ -59,11 +59,16 @@ public class DefaultPassenger implements SimulatorPassenger {
                             onLeavePlane();
                         }
                     },
-                    () -> !queue.isSpotTaken(nextStep)
+                    () -> queue.isSpotFree(nextStep)
             );
-            return Optional.of(result);
+            return ActionResult.nonBlockedAction(result);
         }
-        return Optional.empty();
+        return ActionResult.blockedAction(nextStep);
+    }
+
+    @Override
+    public SimulatorPassenger rootPassenger() {
+        return this;
     }
 
     @Override
@@ -108,8 +113,8 @@ public class DefaultPassenger implements SimulatorPassenger {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof DefaultPassenger other) {
-            return seat.equals(other.seat);
+        if (obj instanceof SimulatorPassenger other) {
+            return seat.equals(other.seat());
         }
         return false;
     }

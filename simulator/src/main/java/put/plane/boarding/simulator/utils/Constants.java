@@ -8,6 +8,5 @@ import java.util.function.BooleanSupplier;
 public class Constants {
 
     public static final BooleanSupplier ALWAYS_TRUE = () -> true;
-    public static final Runnable DO_NOTHING = () -> {
-    };
+    public static final BooleanSupplier ALWAYS_FALSE = () -> false;
 }

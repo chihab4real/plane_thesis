@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import put.plane.boarding.simulator.passenger.SimulatorPassenger;
 import put.plane.boarding.simulator.passenger.action.Action;
+import put.plane.boarding.simulator.passenger.action.ActionResult;
 import put.plane.boarding.simulator.plane.Plane;
 import put.plane.boarding.simulator.plane.structure.queue.Queue;
 import put.plane.boarding.simulator.problem.DeplainingProblem;
@@ -11,11 +12,9 @@ import put.plane.boarding.simulator.problem.PassengerGroup;
 import put.plane.boarding.simulator.simulator.frame.dto.SingleFrame;
 import put.plane.boarding.simulator.simulator.frame.dto.SinglePassenger;
 import put.plane.boarding.simulator.simulator.frame.dto.VisualizationDto;
+import put.plane.boarding.simulator.utils.Constants;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -52,18 +51,20 @@ public final class Simulator {
                 }));
                 while (someCustomerHasMadeAction.get()) {
                     someCustomerHasMadeAction.set(false);
-                    List<SimulatorPassenger> passengersWhoMoved = new ArrayList<>();
+                    Set<SimulatorPassenger> passengersWhoMoved = new HashSet<>();
+                    resolveCollidingPassengersWithAction(passengersNotMoved, plane);
                     passengersNotMoved.forEach(passenger -> {
                         if (!passenger.isDuringAction()) {
                             possiblyCreatePassengerAction(plane, queue, passenger);
                         }
                         if (passenger.isDuringAction()) {
                             passengersWhoMoved.add(passenger);
-                            someCustomerHasMadeAction.set(true);
-                            doPassengerAction(passenger, queue);
+                            if (doPassengerAction(passenger, queue))
+                                someCustomerHasMadeAction.set(true);
                         }
                     });
                     passengersNotMoved.removeIf(passengersWhoMoved::contains);
+                    resolveCollidingPassengersWithoutAction(passengersNotMoved, plane, someCustomerHasMadeAction);
                 }
                 passengers.removeIf(p -> !p.isOnPlane());
                 if (request.isSaveVisualization()) {
@@ -81,26 +82,108 @@ public final class Simulator {
                 .build();
     }
 
-    private void doPassengerAction(SimulatorPassenger passenger, Queue queue) {
+    private void resolveCollidingPassengersWithoutAction(List<SimulatorPassenger> passengersNotMoved, Plane plane, AtomicBoolean someCustomerHasMadeAction) {
+        Queue queue = plane.getQueue();
+        List<SimulatorPassenger> passengersWithoutAction = passengersNotMoved.stream()
+                .filter(p -> p.toAction() == null && queue.findPassenger(p) != -1)
+                .toList();
+        Set<SimulatorPassenger> otherResolved = new HashSet<>();
+        for (SimulatorPassenger passenger : passengersWithoutAction) {
+            if (otherResolved.contains(passenger))
+                continue;
+            int passengerPosition = queue.findPassenger(passenger);
+            ActionResult passengerAction = passenger.chooseAction(plane);
+
+            int passengerActionDirection = passengerAction.actionDirection();
+            SimulatorPassenger otherRoot = queue.getPassengerAt(passengerActionDirection);
+            SimulatorPassenger other = passengersNotMoved.stream()
+                    .filter(p -> p.rootPassenger().equals(otherRoot))
+                    .findFirst().orElse(null);
+            if (other == null || other.isDuringAction())
+                continue;
+            ActionResult otherAction = other.chooseAction(plane);
+
+            if (passengerPosition == otherAction.actionDirection()) {
+                Action action1 = new Action(
+                        passengerActionDirection,
+                        passenger.toMovingDuration(),
+                        null,
+                        Constants.ALWAYS_FALSE);
+                Action action2 = new Action(
+                        passengerPosition,
+                        other.toMovingDuration(),
+                        null,
+                        Constants.ALWAYS_FALSE);
+                passenger.setAction(action1);
+                other.setAction(action2);
+                queue.lockSpot(passenger, action1.getDirection());
+                queue.lockSpot(other, action2.getDirection());
+                otherResolved.add(other);
+                someCustomerHasMadeAction.set(true);
+            }
+        }
+    }
+
+    private void resolveCollidingPassengersWithAction(List<SimulatorPassenger> passengersNotMoved, Plane plane) {
+        Queue queue = plane.getQueue();
+        List<SimulatorPassenger> passengersWithAction = passengersNotMoved.stream()
+                .filter(p -> p.toAction() != null
+                        && p.toAction().isOverWaiting()
+                        && p.toAction().getDirection() != EXIT_FROM_PLANE
+                        && queue.findPassenger(p) != -1)
+                .toList();
+        Set<SimulatorPassenger> otherResolved = new HashSet<>();
+        for (SimulatorPassenger passenger : passengersWithAction) {
+            if (otherResolved.contains(passenger.rootPassenger()))
+                continue;
+            Action passengerAction = passenger.toAction();
+            SimulatorPassenger other = queue.getPassengerAt(passengerAction.getDirection());
+            if (other == null || other.toAction() == null || other == passenger.rootPassenger()) {
+                continue;
+            }
+            int passengerPosition = queue.findPassenger(passenger);
+            Action otherAction = other.toAction();
+            if (otherAction.isOverWaiting() && passengerPosition == otherAction.getDirection()) {
+                swapPassengers(queue, passenger, other);
+                passengersNotMoved.remove(passenger);
+                passengersNotMoved.removeIf(p -> p.rootPassenger().equals(other));
+                passenger.setAction(null);
+                other.setAction(null);
+                otherResolved.add(other);
+            }
+        }
+    }
+
+    private void swapPassengers(Queue queue, SimulatorPassenger passenger1, SimulatorPassenger passenger2) {
+        int position1 = queue.findPassenger(passenger1);
+        int position2 = queue.findPassenger(passenger2);
+
+        queue.takeSpot(passenger1, position2);
+        queue.takeSpot(passenger2, position1);
+    }
+
+    private boolean doPassengerAction(SimulatorPassenger passenger, Queue queue) {
         Action action = passenger.toAction();
         if (action.isOver()) {
             passenger.onActionComplete();
-            if (action.getLocation() != EXIT_FROM_PLANE) {
-                queue.takeSpot(passenger, action.getLocation());
+            if (action.getDirection() != EXIT_FROM_PLANE) {
+                queue.takeSpot(passenger, action.getDirection());
             }
+            return true;
         } else {
-            action.makeProgress();
+            return action.makeProgress();
         }
     }
 
     private void possiblyCreatePassengerAction(Plane plane, Queue queue, SimulatorPassenger passenger) {
-        Optional<Action> nextAction = passenger.chooseAction(plane);
-        nextAction.ifPresent(action -> {
+        ActionResult nextAction = passenger.chooseAction(plane);
+        if (nextAction.action() != null) {
+            Action action = nextAction.action();
             passenger.setAction(action);
-            if (action.getLocation() != queue.findPassenger(passenger)) {
-                queue.lockSpot(passenger, action.getLocation());
+            if (action.getDirection() != queue.findPassenger(passenger)) {
+                queue.lockSpot(passenger, action.getDirection());
             }
-        });
+        }
     }
 
     private void savePassengerFrames(List<SimulatorPassenger> passengers, Queue queue, List<SingleFrame> visualizationFrames) {
