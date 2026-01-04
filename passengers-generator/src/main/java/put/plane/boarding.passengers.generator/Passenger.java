@@ -14,4 +14,5 @@ public class Passenger {
     private final Integer speedExiting;
     private final boolean hasLuggage;
     private final String luggageLocation;
+    private final Integer luggagePickUpTime;
 }
