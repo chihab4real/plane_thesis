@@ -19,7 +19,7 @@ public class FileFactory {
         List<File> result = new ArrayList<>();
 
         IntStream.range(0, numberOfFiles).forEach(i -> {
-            File file = new File(fileNamingStrategy.name(i), distance(i, numberOfFiles));
+            File file = new File(fileNamingStrategy.name(i), distance(i, numberOfFiles), fileNamingStrategy.side(i, numberOfFiles));
             result.add(file);
         });
 
