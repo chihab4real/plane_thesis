@@ -243,6 +243,7 @@ public class Optimizer {
                 plane.getRows(),
                 plane.getColumns(),
                 plane.getRows() * plane.getColumns(),
+                0,
                 0
         );
     }
