@@ -46,6 +46,11 @@ public abstract class PassengerDecorator implements SimulatorPassenger {
     }
 
     @Override
+    public int toGroup() {
+        return passenger.toGroup();
+    }
+
+    @Override
     public SimulatorPassenger rootPassenger() {
         return passenger.rootPassenger();
     }
