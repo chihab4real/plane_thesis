@@ -12,7 +12,6 @@ import put.plane.boarding.simulator.plane.factory.PlaneFactory;
 import put.plane.boarding.simulator.problem.DeplainingProblem;
 import put.plane.boarding.simulator.problem.PassengerGroup;
 import put.plane.boarding.simulator.simulator.factory.TestPassengerFactory;
-import put.plane.boarding.simulator.simulator.frame.XMLService;
 
 import java.util.List;
 
@@ -30,9 +29,6 @@ class SimulatorTest {
 
     @Autowired
     private TestPassengerFactory passengerFactory;
-
-    @Autowired
-    private XMLService xmlService;
 
     @Test
     void smallNonCollisionSetup() {
@@ -263,7 +259,47 @@ class SimulatorTest {
                 .build();
         SimulatorRequest simulatorRequest = new SimulatorRequest(deplainingProblem);
         SimulatorResponse simulatorResponse = simulator.simulate(simulatorRequest);
-        xmlService.saveVisualization(simulatorResponse.visualizationDto(), "test");
         assertEquals(32, simulatorResponse.time());
+    }
+
+    @Test
+    void bigLuggageSetup() {
+        int rows = 5;
+        int cols = 4;
+        Plane plane = planeFactory.create(rows, cols);
+
+        List<SimulatorPassenger> passengers = List.of(
+                passengerFactory.createLuggage(plane, 0, 0, 1, 1, 4, 5),
+                passengerFactory.createLuggage(plane, 0, 1, 1, 1, 4, 5),
+                passengerFactory.createLuggage(plane, 0, 2, 1, 1, 4, 5),
+                passengerFactory.createLuggage(plane, 0, 3, 1, 1, 4, 5),
+                passengerFactory.createLuggage(plane, 1, 0, 2, 2, 3, 5),
+                passengerFactory.createLuggage(plane, 1, 1, 2, 2, 3, 5),
+                passengerFactory.createLuggage(plane, 1, 2, 2, 2, 3, 5),
+                passengerFactory.createLuggage(plane, 1, 3, 2, 2, 3, 5),
+                passengerFactory.createLuggage(plane, 2, 0, 3, 3, 2, 5),
+                passengerFactory.createLuggage(plane, 2, 1, 3, 3, 2, 5),
+                passengerFactory.createLuggage(plane, 2, 2, 3, 3, 2, 5),
+                passengerFactory.createLuggage(plane, 2, 3, 3, 3, 2, 5),
+                passengerFactory.createLuggage(plane, 3, 0, 4, 4, 1, 5),
+                passengerFactory.createLuggage(plane, 3, 1, 4, 4, 1, 5),
+                passengerFactory.createLuggage(plane, 3, 2, 4, 4, 1, 5),
+                passengerFactory.createLuggage(plane, 3, 3, 4, 4, 1, 5),
+                passengerFactory.createLuggage(plane, 4, 0, 5, 5, 0, 5),
+                passengerFactory.createLuggage(plane, 4, 1, 5, 5, 0, 5),
+                passengerFactory.createLuggage(plane, 4, 2, 5, 5, 0, 5),
+                passengerFactory.createLuggage(plane, 4, 3, 5, 5, 0, 5)
+        );
+
+        List<PassengerGroup> passengerGroups = List.of(new PassengerGroup(passengers));
+        plane.boardPassengers(passengerGroups);
+
+        DeplainingProblem deplainingProblem = DeplainingProblem.builder()
+                .plane(plane)
+                .passengers(passengerGroups)
+                .build();
+        SimulatorRequest simulatorRequest = new SimulatorRequest(deplainingProblem);
+        SimulatorResponse simulatorResponse = simulator.simulate(simulatorRequest);
+        assertEquals(166, simulatorResponse.time());
     }
 }

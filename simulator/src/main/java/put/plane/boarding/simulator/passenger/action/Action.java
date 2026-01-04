@@ -34,7 +34,11 @@ public class Action {
         return actionProgress >= actionDuration;
     }
 
-    public void makeProgress() {
-        actionProgress = Math.min(actionProgress + 1, actionDuration);
+    public boolean makeProgress() {
+        if (actionProgress == actionDuration) {
+            return false;
+        }
+        actionProgress++;
+        return true;
     }
 }

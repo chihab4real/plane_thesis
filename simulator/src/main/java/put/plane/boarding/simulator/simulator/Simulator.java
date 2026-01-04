@@ -59,8 +59,8 @@ public final class Simulator {
                         }
                         if (passenger.isDuringAction()) {
                             passengersWhoMoved.add(passenger);
-                            someCustomerHasMadeAction.set(true);
-                            doPassengerAction(passenger, queue);
+                            if (doPassengerAction(passenger, queue))
+                                someCustomerHasMadeAction.set(true);
                         }
                     });
                     passengersNotMoved.removeIf(passengersWhoMoved::contains);
@@ -93,8 +93,11 @@ public final class Simulator {
             ActionResult passengerAction = passenger.chooseAction(plane);
 
             int passengerActionDirection = passengerAction.actionDirection();
-            SimulatorPassenger other = queue.getPassengerAt(passengerActionDirection);
-            if (other == null || other.isDuringAction() || passengersNotMoved.stream().noneMatch(p -> p.rootPassenger().equals(other)))
+            SimulatorPassenger otherRoot = queue.getPassengerAt(passengerActionDirection);
+            SimulatorPassenger other = passengersNotMoved.stream()
+                    .filter(p -> p.rootPassenger().equals(otherRoot))
+                    .findFirst().orElse(null);
+            if (other == null || other.isDuringAction())
                 continue;
             ActionResult otherAction = other.chooseAction(plane);
 
@@ -111,6 +114,8 @@ public final class Simulator {
                         Constants.ALWAYS_FALSE);
                 passenger.setAction(action1);
                 other.setAction(action2);
+                queue.lockSpot(passenger, action1.getDirection());
+                queue.lockSpot(other, action2.getDirection());
                 otherResolved.add(other);
                 someCustomerHasMadeAction.set(true);
             }
@@ -131,7 +136,7 @@ public final class Simulator {
                 continue;
             Action passengerAction = passenger.toAction();
             SimulatorPassenger other = queue.getPassengerAt(passengerAction.getDirection());
-            if (other == null || other == passenger.rootPassenger()) {
+            if (other == null || other.toAction() == null || other == passenger.rootPassenger()) {
                 continue;
             }
             int passengerPosition = queue.findPassenger(passenger);
@@ -155,15 +160,16 @@ public final class Simulator {
         queue.takeSpot(passenger2, position1);
     }
 
-    private void doPassengerAction(SimulatorPassenger passenger, Queue queue) {
+    private boolean doPassengerAction(SimulatorPassenger passenger, Queue queue) {
         Action action = passenger.toAction();
         if (action.isOver()) {
             passenger.onActionComplete();
             if (action.getDirection() != EXIT_FROM_PLANE) {
                 queue.takeSpot(passenger, action.getDirection());
             }
+            return true;
         } else {
-            action.makeProgress();
+            return action.makeProgress();
         }
     }
 
