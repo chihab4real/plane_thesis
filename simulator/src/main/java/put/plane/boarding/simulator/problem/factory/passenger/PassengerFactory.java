@@ -45,7 +45,7 @@ public class PassengerFactory {
         DefaultPassenger defaultPassenger = new DefaultPassenger(seat, passenger.getSpeedQueue(), passenger.getSpeedExiting());
         PassengerBuilder result = new PassengerBuilder(defaultPassenger);
         if (passenger.isHasLuggage()) {
-            result = result.withBaggage(extractBaggageLocation(passenger), 2);
+            result = result.withBaggage(extractBaggageLocation(passenger), passenger.getLuggagePickUpTime());
         }
         return result.build();
     }
