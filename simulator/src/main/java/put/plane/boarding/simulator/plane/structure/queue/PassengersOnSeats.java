@@ -23,10 +23,27 @@ public class PassengersOnSeats {
     }
 
     public boolean isPassengerInFrontSeat(SimulatorPassenger passenger) {
-        List<SimulatorPassenger> passengersInFront = passengersOnSeatsByRows.get(passenger.seat().row())
-                .stream()
-                .filter(p -> p.seat().file().distance() < passenger.seat().file().distance())
-                .toList();
+        List<SimulatorPassenger> passengersInFront = getPassengersInFront(passenger);
         return passengersInFront.isEmpty();
+    }
+
+    public boolean isPassengerStuckInSeat(SimulatorPassenger passenger) {
+        List<SimulatorPassenger> passengersInFront = getPassengersInFront(passenger);
+        if (passengersInFront.isEmpty()) {
+            return false;
+        }
+        int smallestGroupInFront = passengersInFront
+                .stream()
+                .mapToInt(SimulatorPassenger::toGroup)
+                .min().orElseThrow();
+        return smallestGroupInFront > passenger.toGroup();
+    }
+
+    private List<SimulatorPassenger> getPassengersInFront(SimulatorPassenger passenger) {
+        return passengersOnSeatsByRows.get(passenger.seat().row())
+                .stream()
+                .filter(p -> p.seat().file().distance() < passenger.seat().file().distance()
+                        && p.seat().file().side() == passenger.seat().file().side())
+                .toList();
     }
 }

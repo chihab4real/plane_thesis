@@ -1,5 +1,6 @@
 package put.plane.boarding.simulator.passenger.impl;
 
+import lombok.Setter;
 import put.plane.boarding.simulator.passenger.SimulatorPassenger;
 import put.plane.boarding.simulator.passenger.action.Action;
 import put.plane.boarding.simulator.passenger.action.ActionResult;
@@ -14,18 +15,21 @@ import static put.plane.boarding.simulator.plane.PlaneConstants.EXIT_FROM_PLANE;
 
 public class DefaultPassenger implements SimulatorPassenger {
 
+    @Setter
     private Action action;
     private final Seat startSeat;
     private final Seat seat;
     private final int movingDuration;
     private final int enteringDuration;
+    private final int group;
     private boolean hasLeftPlane = false;
 
-    public DefaultPassenger(Seat seat, int movingDuration, int enteringDuration) {
+    public DefaultPassenger(Seat seat, int movingDuration, int enteringDuration, int group) {
         this.seat = seat;
         this.startSeat = seat;
         this.movingDuration = movingDuration;
         this.enteringDuration = enteringDuration;
+        this.group = group;
     }
 
     @Override
@@ -36,14 +40,25 @@ public class DefaultPassenger implements SimulatorPassenger {
         boolean isInQueue = positionInQueue >= 0;
 
         if (!isInQueue) {
-            if (queue.isSpotAvailable(seat.row()) && passengersOnSeats.isPassengerInFrontSeat(this)) {
-                Action result = new Action(
-                        seat.row(),
-                        enteringDuration,
-                        () -> passengersOnSeats.onPassengerOffSeat(this),
-                        () -> queue.isSpotFree(seat.row())
-                );
-                return ActionResult.nonBlockedAction(result);
+            if (queue.isSpotAvailable(seat.row())) {
+                if (passengersOnSeats.isPassengerInFrontSeat(this)) {
+                    Action result = new Action(
+                            seat.row(),
+                            enteringDuration,
+                            () -> passengersOnSeats.onPassengerOffSeat(this),
+                            () -> queue.isSpotFree(seat.row())
+                    );
+                    return ActionResult.nonBlockedAction(result);
+                }
+                if (passengersOnSeats.isPassengerStuckInSeat(this)) {
+                    Action result = new Action(
+                            seat.row(),
+                            enteringDuration + 10,
+                            () -> passengersOnSeats.onPassengerOffSeat(this),
+                            () -> queue.isSpotFree(seat.row())
+                    );
+                    return ActionResult.nonBlockedAction(result);
+                }
             }
             return ActionResult.blockedAction(seat.row());
         }
@@ -64,6 +79,11 @@ public class DefaultPassenger implements SimulatorPassenger {
             return ActionResult.nonBlockedAction(result);
         }
         return ActionResult.blockedAction(nextStep);
+    }
+
+    @Override
+    public int toGroup() {
+        return group;
     }
 
     @Override
@@ -89,11 +109,6 @@ public class DefaultPassenger implements SimulatorPassenger {
     @Override
     public Action toAction() {
         return action;
-    }
-
-    @Override
-    public void setAction(Action action) {
-        this.action = action;
     }
 
     @Override

@@ -11,6 +11,7 @@ import put.plane.boarding.simulator.problem.PassengerGroup;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
 
 /**
  * This class is used to map Passengers {@link Passenger} from passengers-generator
@@ -27,22 +28,22 @@ public class PassengerFactory {
      * @return list of {@link PassengerGroup}, made of passengers from respective lists
      */
     public static List<PassengerGroup> createSimulatorPassengers(Plane plane, List<List<Passenger>> passengerList) {
-        return passengerList.stream()
-                .map(passengers -> create(plane, passengers))
+        return IntStream.range(0, passengerList.size())
+                .mapToObj(i -> create(plane, passengerList.get(i), i))
                 .toList();
     }
 
-    private static PassengerGroup create(Plane plane, List<Passenger> passengers) {
+    private static PassengerGroup create(Plane plane, List<Passenger> passengers, int group) {
         List<SimulatorPassenger> simulatorPassengers = passengers
                 .stream()
-                .map(passenger -> create(plane, passenger))
+                .map(passenger -> create(plane, passenger, group))
                 .toList();
         return new PassengerGroup(simulatorPassengers);
     }
 
-    private static SimulatorPassenger create(Plane plane, Passenger passenger) {
+    private static SimulatorPassenger create(Plane plane, Passenger passenger, int group) {
         Seat seat = extractSeat(plane, passenger);
-        DefaultPassenger defaultPassenger = new DefaultPassenger(seat, passenger.getSpeedQueue(), passenger.getSpeedExiting());
+        DefaultPassenger defaultPassenger = new DefaultPassenger(seat, passenger.getSpeedQueue(), passenger.getSpeedExiting(), group);
         PassengerBuilder result = new PassengerBuilder(defaultPassenger);
         if (passenger.isHasLuggage()) {
             result = result.withBaggage(extractBaggageLocation(passenger), passenger.getLuggagePickUpTime());

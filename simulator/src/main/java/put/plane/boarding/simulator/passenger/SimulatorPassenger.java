@@ -23,6 +23,8 @@ public interface SimulatorPassenger {
 
     ActionResult chooseAction(Plane plane);
 
+    int toGroup();
+
     default boolean isDuringAction() {
         Action action = toAction();
         return action != null;
