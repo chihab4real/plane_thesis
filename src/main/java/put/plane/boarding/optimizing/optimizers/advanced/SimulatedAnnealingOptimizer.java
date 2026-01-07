@@ -1,6 +1,7 @@
 package put.plane.boarding.optimizing.optimizers.advanced;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 import put.plane.boarding.optimizing.AdvancedOptimizer;
 import put.plane.boarding.optimizing.OptimizerResult;
 import put.plane.boarding.passengers.generator.Passenger;
@@ -16,10 +17,8 @@ import java.util.Random;
 import java.util.stream.Collectors;
 
 @Slf4j
+@Service
 public class SimulatedAnnealingOptimizer extends AdvancedOptimizer {
-    public SimulatedAnnealingOptimizer(Simulator simulator, XMLService xmlservice, PlaneFactory planeFactory) {
-        super(simulator, xmlservice, planeFactory);
-    }
 
     public OptimizerResult run(boolean logs, Plane plane, List<Passenger> generatedPassengers,String path, double initialTemp, double coolingRate,
                                int maxIterations) {
@@ -31,13 +30,13 @@ public class SimulatedAnnealingOptimizer extends AdvancedOptimizer {
         }
 
         // Generate initial random solution
+        InitialSolution initial = generateInitialSolution(totalPassengers, plane, generatedPassengers);
+        List<List<Integer>> currentSolution = initial.currentSolution();
+        int currentEnergy = initial.currentEnergy();
+        List<List<Integer>> bestSolution = initial.bestSolution();
+        int bestEnergy = initial.bestEnergy();
+
         Random random = new Random();
-        List<List<Integer>> currentSolution = generateRandomSolution(totalPassengers, random);
-        int currentEnergy = evaluateFitness(plane, currentSolution, generatedPassengers);
-
-        List<List<Integer>> bestSolution = deepCopyIndices(currentSolution);
-        int bestEnergy = currentEnergy;
-
         double temperature = initialTemp;
         int iteration = 0;
         int acceptedMoves = 0;
@@ -49,7 +48,9 @@ public class SimulatedAnnealingOptimizer extends AdvancedOptimizer {
 
         while (iteration < maxIterations && temperature > 0.01) {
             // Generate neighbor solution
+
             List<List<Integer>> neighbor = generateNeighbor(currentSolution, random);
+
 
             if (!isValidIndividual(neighbor, totalPassengers)) {
                 log.warn("Generated invalid neighbor, skipping");
@@ -116,41 +117,5 @@ public class SimulatedAnnealingOptimizer extends AdvancedOptimizer {
         return runOptimization(plane, logs, path, "SimulatedAnnealing",
                 "Simulated Annealing Optimization", bestSolution, generatedPassengers, true);
     }
-
-    @Override
-    public OptimizerResult runOptimization(Plane plane, boolean logs,String path, String methodName, String description,
-                                            List<List<Integer>> allGroups, List<Passenger> generatedPassengers,
-                                            boolean saveVisualization) {
-        List<List<Passenger>> mappedPassengers = allGroups
-                .stream()
-                .map(passengers -> passengers
-                        .stream()
-                        .map(generatedPassengers::get)
-                        .toList())
-                .collect(Collectors.toCollection(ArrayList::new));
-
-        if ("Zigzag".equals(methodName)) {
-            Collections.reverse(mappedPassengers);
-        }
-
-        int time = getTimeForOrder(plane, mappedPassengers, path, methodName, saveVisualization);
-
-        if (logs) {
-            log.info(description);
-            log.info("Total groups: {}", allGroups.size());
-            for (int i = 0; i < allGroups.size(); i++) {
-                log.info("Group {} size: {}", i + 1, allGroups.get(i).size());
-            }
-        }
-
-        // Flatten groups into a single list of passenger IDs
-        List<Integer> flattenedSolution = allGroups.stream()
-                .flatMap(List::stream)
-                .collect(Collectors.toList());
-
-        return new OptimizerResult(time, flattenedSolution);
-    }
-
-
 
 }

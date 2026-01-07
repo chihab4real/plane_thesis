@@ -1,7 +1,9 @@
 package put.plane.boarding.optimizing;
 
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import put.plane.boarding.passengers.generator.Passenger;
 import put.plane.boarding.simulator.plane.Plane;
@@ -20,12 +22,16 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public abstract class Optimizer {
 
-    final Simulator simulator;
-    final XMLService xmlservice;
-    final PlaneFactory planeFactory;
+    @Setter(onMethod_ = @Autowired)
+    protected Simulator simulator;
+
+    @Setter(onMethod_ = @Autowired)
+    protected XMLService xmlservice;
+
+    @Setter(onMethod_ = @Autowired)
+    protected PlaneFactory planeFactory;
 
     public OptimizerResult runOptimization(Plane plane, boolean logs, String path, String methodName, String description,
                                            List<List<Integer>> allGroups, List<Passenger> generatedPassengers,

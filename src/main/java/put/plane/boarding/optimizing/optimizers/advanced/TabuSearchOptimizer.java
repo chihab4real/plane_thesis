@@ -1,6 +1,7 @@
 package put.plane.boarding.optimizing.optimizers.advanced;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 import put.plane.boarding.optimizing.AdvancedOptimizer;
 import put.plane.boarding.optimizing.OptimizerResult;
 import put.plane.boarding.passengers.generator.Passenger;
@@ -16,10 +17,9 @@ import java.util.Random;
 import java.util.stream.Collectors;
 
 @Slf4j
+@Service
 public class TabuSearchOptimizer extends AdvancedOptimizer {
-    public TabuSearchOptimizer(Simulator simulator, XMLService xmlservice, PlaneFactory planeFactory) {
-        super(simulator, xmlservice, planeFactory);
-    }
+
 
     public OptimizerResult run(boolean logs, Plane plane, List<Passenger> generatedPassengers, String path, int maxIterations, int tabuTenure,
                                int neighborhoodSize) {
@@ -31,19 +31,16 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
                     maxIterations, tabuTenure, neighborhoodSize);
         }
 
-        Random random = new Random();
-
-        // Generate initial solution
-        List<List<Integer>> currentSolution = generateRandomSolution(totalPassengers, random);
-        int currentEnergy = evaluateFitness(plane, currentSolution, generatedPassengers);
-
-        // Best solution tracking
-        List<List<Integer>> bestSolution = deepCopyIndices(currentSolution);
-        int bestEnergy = currentEnergy;
+        InitialSolution initial = generateInitialSolution(totalPassengers, plane, generatedPassengers);
+        List<List<Integer>> currentSolution = initial.currentSolution();
+        int currentEnergy = initial.currentEnergy();
+        List<List<Integer>> bestSolution = initial.bestSolution();
+        int bestEnergy = initial.bestEnergy();
 
         // Tabu list - stores hash codes of recent solutions
         List<NeighborSolution> tabuList = new ArrayList<>();
 
+        Random random = new Random();
         int iteration = 0;
         int iterationsWithoutImprovement = 0;
         final int DIVERSIFICATION_THRESHOLD = 50; // Reset if stuck
@@ -63,10 +60,10 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
                     continue;
                 }
 
-                int neighborHash = computeSolutionHash(neighbor);
+
                 int neighborEnergy = evaluateFitness(plane, neighbor, generatedPassengers);
 
-                neighbors.add(new NeighborSolution(neighbor, neighborEnergy, neighborHash));
+                neighbors.add(new NeighborSolution(neighbor, neighborEnergy));
             }
 
             if (neighbors.isEmpty()) {
@@ -79,7 +76,7 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
             NeighborSolution bestNeighbor = null;
 
             for (NeighborSolution neighbor : neighbors) {
-                boolean isTabu = tabuList.contains(neighbor.hash());
+                boolean isTabu = tabuList.contains(neighbor);
                 boolean aspirationCriterion = neighbor.energy() < bestEnergy; // Override tabu if global best
 
                 if (!isTabu || aspirationCriterion) {
@@ -161,18 +158,6 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
                 "Tabu Search Optimization", bestSolution, generatedPassengers, true);
     }
 
-
-    // Compute hash for solution to track in tabu list
-    private int computeSolutionHash(List<List<Integer>> solution) {
-        // Hash based on group structure (not just passenger order)
-        int hash = 0;
-        for (int i = 0; i < solution.size(); i++) {
-            List<Integer> group = solution.get(i);
-            // Weight by position to make order matter
-            hash = 31 * hash + (i * 1000 + group.size() * 100 + group.hashCode());
-        }
-        return hash;
-    }
 
     @Override
     public OptimizerResult runOptimization(Plane plane, boolean logs,String path, String methodName, String description,

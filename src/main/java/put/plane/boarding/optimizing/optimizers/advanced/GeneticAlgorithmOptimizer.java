@@ -1,6 +1,7 @@
 package put.plane.boarding.optimizing.optimizers.advanced;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 import put.plane.boarding.optimizing.AdvancedOptimizer;
 import put.plane.boarding.optimizing.OptimizerResult;
 import put.plane.boarding.passengers.generator.Passenger;
@@ -15,10 +16,8 @@ import java.util.List;
 import java.util.Random;
 
 @Slf4j
+@Service
 public class GeneticAlgorithmOptimizer extends AdvancedOptimizer {
-    public GeneticAlgorithmOptimizer(Simulator simulator, XMLService xmlservice, PlaneFactory planeFactory) {
-        super(simulator, xmlservice, planeFactory);
-    }
 
     public OptimizerResult run(boolean logs, Plane plane, List<Passenger> generatedPassengers,String path, int populationSize, int generations, double mutationRate, double crossoverRate) {
         int totalPassengers = generatedPassengers.size();
@@ -45,19 +44,15 @@ public class GeneticAlgorithmOptimizer extends AdvancedOptimizer {
 
             List<IndividualFitness> evaluated = new ArrayList<>();
             for (List<List<Integer>> individual : population) {
-                try {
-                    int fitness = evaluateFitness(plane, individual, generatedPassengers);
-                    evaluated.add(new IndividualFitness(individual, fitness));
+                int fitness = evaluateFitness(plane, individual, generatedPassengers);
+                evaluated.add(new IndividualFitness(individual, fitness));
 
-                    if (fitness < bestTime) {
-                        bestTime = fitness;
-                        bestSolution = deepCopyIndices(individual);
-                        if (logs) {
-                            log.info("Gen {}: New best = {}", gen, bestTime);
-                        }
+                if (fitness < bestTime) {
+                    bestTime = fitness;
+                    bestSolution = deepCopyIndices(individual);
+                    if (logs) {
+                        log.info("Gen {}: New best = {}", gen, bestTime);
                     }
-                } catch (Exception e) {
-                    log.error("Error evaluating individual in gen {}: {}", gen, e.getMessage());
                 }
             }
 
@@ -124,38 +119,19 @@ public class GeneticAlgorithmOptimizer extends AdvancedOptimizer {
         Random random = new Random();
 
         for (int i = 0; i < populationSize; i++) {
-            List<Integer> allIndices = new ArrayList<>();
-            for (int j = 0; j < numPassengers; j++) {
-                allIndices.add(j);
-            }
-
-            // ONLY shuffle, don't randomly group - groups will be created based on row proximity
-            Collections.shuffle(allIndices);
-
-            // Create groups of passengers that are close to each other (better for deplaning)
-            int minGroupSize = 2;
-            int maxGroupSize = 8; // Smaller groups for better deplaning flow
-
-            List<List<Integer>> individual = new ArrayList<>();
-            int idx = 0;
-
-            while (idx < numPassengers) {
-                int groupSize = minGroupSize + random.nextInt(maxGroupSize - minGroupSize + 1);
-                groupSize = Math.min(groupSize, numPassengers - idx); // Don't exceed remaining passengers
-
-                List<Integer> group = new ArrayList<>(allIndices.subList(idx, idx + groupSize));
-                individual.add(group);
-                idx += groupSize;
-            }
-
-            population.add(individual);
+            population.add(createRandomGrouping(numPassengers, random));
         }
 
         return population;
     }
 
 
+
     private List<List<Integer>> tournamentSelection(List<IndividualFitness> population, int tournamentSize) {
+        if (population.isEmpty() || tournamentSize <= 0) {
+            throw new IllegalArgumentException("Population cannot be empty and tournament size must be positive");
+        }
+
         Random random = new Random();
         IndividualFitness best = null;
 
@@ -181,6 +157,21 @@ public class GeneticAlgorithmOptimizer extends AdvancedOptimizer {
         List<List<Integer>> source = random.nextBoolean() ? parent1 : parent2;
 
         // Take groups from chosen parent
+        addUnusedPassengersToOffspring(source, offspring, used, totalPassengers);
+
+        // Fill any missing passengers from the other parent
+        List<List<Integer>> otherSource = source == parent1 ? parent2 : parent1;
+        addUnusedPassengersToOffspring(otherSource, offspring, used, totalPassengers);
+
+        return offspring;
+    }
+
+    private void addUnusedPassengersToOffspring(
+        List<List<Integer>> source,
+        List<List<Integer>> offspring,
+        boolean[] used,
+        int totalPassengers
+    ) {
         for (List<Integer> group : source) {
             List<Integer> newGroup = new ArrayList<>();
             for (Integer id : group) {
@@ -193,23 +184,6 @@ public class GeneticAlgorithmOptimizer extends AdvancedOptimizer {
                 offspring.add(newGroup);
             }
         }
-
-        // Fill any missing passengers from the other parent
-        List<List<Integer>> otherSource = source == parent1 ? parent2 : parent1;
-        for (List<Integer> group : otherSource) {
-            List<Integer> newGroup = new ArrayList<>();
-            for (Integer id : group) {
-                if (id >= 0 && id < totalPassengers && !used[id]) {
-                    newGroup.add(id);
-                    used[id] = true;
-                }
-            }
-            if (!newGroup.isEmpty()) {
-                offspring.add(newGroup);
-            }
-        }
-
-        return offspring;
     }
 
     // Mutation - swap two random groups
@@ -239,11 +213,11 @@ public class GeneticAlgorithmOptimizer extends AdvancedOptimizer {
                 individual.set(idx, new ArrayList<>(group.subList(0, splitPoint)));
                 individual.add(newGroup);
             }
-        } else if (individual.size() > 1) {
-            // Swap two groups (original mutation)
-            int idx1 = random.nextInt(individual.size());
-            int idx2 = random.nextInt(individual.size());
-            Collections.swap(individual, idx1, idx2);
+        } else if (individual.size() > 2) {
+            // Reverse a random subsequence of groups
+            int start = random.nextInt(individual.size() - 1);
+            int end = start + 1 + random.nextInt(individual.size() - start - 1);
+            Collections.reverse(individual.subList(start, end + 1));
         }
     }
 

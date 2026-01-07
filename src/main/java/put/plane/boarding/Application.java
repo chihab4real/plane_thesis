@@ -1,8 +1,10 @@
 package put.plane.boarding;
 
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.DateFormatUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.stereotype.Service;
 import put.plane.boarding.optimizing.Optimizer;
@@ -27,12 +29,26 @@ import java.util.List;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class Application {
 
-    private final PlaneFactory planeFactory;
-    private final XMLService xmlService;
-    private final List<Optimizer> basicOptimizers;
+    @Setter(onMethod_ = @Autowired)
+    private PlaneFactory planeFactory;
+
+    @Setter(onMethod_ = @Autowired)
+    private XMLService xmlService;
+
+    @Setter(onMethod_ = @Autowired)
+    private List<Optimizer> basicOptimizers;
+
+    @Setter(onMethod_ = @Autowired)
+    private GeneticAlgorithmOptimizer geneticAlgorithmOptimizer;
+
+    @Setter(onMethod_ = @Autowired)
+    private SimulatedAnnealingOptimizer simulatedAnnealingOptimizer;
+
+    @Setter(onMethod_ = @Autowired)
+    private TabuSearchOptimizer tabuSearchOptimizer;
+
 
     public static void main(String[] args) {
 
@@ -49,12 +65,6 @@ public class Application {
 
         List<Passenger> generatedPassengers = generatePassengers(plane);
         xmlService.saveGeneratedPassengers(generatedPassengers, path);
-        //List<Integer> order = IntStream.range(0, plane.getColumns() * plane.getRows()).boxed().collect(Collectors.toList());
-
-        basicOptimizers.add(new ZigZagOptimizer(new Simulator(), xmlService, planeFactory));
-        basicOptimizers.add(new RowBasedOptimizer(new Simulator(), xmlService, planeFactory, true));
-        basicOptimizers.add(new RowBasedOptimizer(new Simulator(), xmlService, planeFactory, false));
-        basicOptimizers.add(new AisleMiddleWindowOptimizer(new Simulator(), xmlService, planeFactory));
 
         log.info("Running Basic Optimizers\n");
         for (Optimizer optimizer : basicOptimizers) {
@@ -66,19 +76,16 @@ public class Application {
         log.info("Running Advanced Optimizers\n");
 
         log.info("Genetic Algorithm Optimization\n");
-        GeneticAlgorithmOptimizer optimizer = new GeneticAlgorithmOptimizer(new Simulator(), xmlService, planeFactory);
-        OptimizerResult gaResult = optimizer.run(true, plane, generatedPassengers, path, 50, 20,
+        OptimizerResult gaResult = geneticAlgorithmOptimizer.run(true, plane, generatedPassengers, path, 50, 20,
                 0.2, 0.8);
         log.info("Best time from GA: {}\n\n", gaResult);
 
         log.info("Simulated Annealing Optimization\n");
-        SimulatedAnnealingOptimizer saOptimizer = new SimulatedAnnealingOptimizer(new Simulator(), xmlService, planeFactory);
-        OptimizerResult saResult = saOptimizer.run(true, plane, generatedPassengers, path, 100.0, 0.995, 1000);
+        OptimizerResult saResult = simulatedAnnealingOptimizer.run(true, plane, generatedPassengers, path, 100.0, 0.995, 1000);
         log.info("Best time from SA: {}\n\n", saResult);
 
         log.info("Tabu Search Optimization\n");
-        TabuSearchOptimizer tsOptimizer = new TabuSearchOptimizer(new Simulator(), xmlService, planeFactory);
-        OptimizerResult tsResult = tsOptimizer.run(true, plane, generatedPassengers, path, 500, 15, 20);
+        OptimizerResult tsResult = tabuSearchOptimizer.run(true, plane, generatedPassengers, path, 500, 15, 20);
         log.info("Best time from TS: {}\n\n", tsResult);
     }
 

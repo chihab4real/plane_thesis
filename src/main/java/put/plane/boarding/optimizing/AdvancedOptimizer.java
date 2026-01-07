@@ -20,9 +20,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class AdvancedOptimizer extends Optimizer {
-    public AdvancedOptimizer(Simulator simulator, XMLService xmlservice, PlaneFactory planeFactory) {
-        super(simulator, xmlservice, planeFactory);
-    }
+
 
     @Override
     public OptimizerResult runOptimization(Plane plane, boolean logs, String path, String methodName, String description,
@@ -91,26 +89,15 @@ public class AdvancedOptimizer extends Optimizer {
                         .collect(Collectors.toList()))
                 .collect(Collectors.toList());
 
-        Plane freshPlane = planeFactory.create(plane.getRows(), plane.getColumns());
-        List<PassengerGroup> currPassengers = PassengerFactory.createSimulatorPassengers(freshPlane, passengerGroups);
-        freshPlane.boardPassengers(currPassengers);
-
-        DeplainingProblem problem = DeplainingProblem.builder()
-                .plane(freshPlane)
-                .passengers(currPassengers)
-                .build();
-
-        SimulatorRequest request = new SimulatorRequest(problem);
-
         long startTime = System.currentTimeMillis();
         log.info("Starting simulation...");
 
-        SimulatorResponse response = simulator.simulate(request);
+        int time = getTimeForOrder(plane, passengerGroups, null, null, false);
 
         long elapsed = System.currentTimeMillis() - startTime;
-        log.info("Simulation completed: {} ticks in {} ms", response.time(), elapsed);
+        log.info("Simulation completed: {} ticks in {} ms", time, elapsed);
 
-        return response.time();
+        return time;
     }
 
 
@@ -121,7 +108,7 @@ public class AdvancedOptimizer extends Optimizer {
     }
 
     // Generate random initial solution
-    protected List<List<Integer>> generateRandomSolution(int numPassengers, Random random) {
+    protected List<List<Integer>> createRandomGrouping(int numPassengers, Random random) {
         List<Integer> allIndices = new ArrayList<>();
         for (int i = 0; i < numPassengers; i++) {
             allIndices.add(i);
@@ -144,6 +131,31 @@ public class AdvancedOptimizer extends Optimizer {
 
         return solution;
     }
+
+
+    protected List<List<Integer>> generateRandomSolution(int numPassengers, Random random) {
+        return createRandomGrouping(numPassengers, random);
+    }
+
+    protected InitialSolution generateInitialSolution(int totalPassengers, Plane plane, List<Passenger> generatedPassengers) {
+        Random random = new Random();
+        List<List<Integer>> currentSolution = generateRandomSolution(totalPassengers, random);
+        int currentEnergy = evaluateFitness(plane, currentSolution, generatedPassengers);
+
+        List<List<Integer>> bestSolution = deepCopyIndices(currentSolution);
+        int bestEnergy = currentEnergy;
+
+        return new InitialSolution(currentSolution, currentEnergy, bestSolution, bestEnergy);
+    }
+
+    protected record InitialSolution(
+            List<List<Integer>> currentSolution,
+            int currentEnergy,
+            List<List<Integer>> bestSolution,
+            int bestEnergy
+    ) {}
+
+
 
 
     protected List<List<Integer>> generateNeighbor(List<List<Integer>> current, Random random) {
