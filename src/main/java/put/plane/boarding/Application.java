@@ -38,9 +38,6 @@ public class Application {
     private XMLService xmlService;
 
     @Setter(onMethod_ = @Autowired)
-    private List<Optimizer> basicOptimizers;
-
-    @Setter(onMethod_ = @Autowired)
     private GeneticAlgorithmOptimizer geneticAlgorithmOptimizer;
 
     @Setter(onMethod_ = @Autowired)
@@ -48,6 +45,16 @@ public class Application {
 
     @Setter(onMethod_ = @Autowired)
     private TabuSearchOptimizer tabuSearchOptimizer;
+
+    @Setter(onMethod_ = @Autowired)
+    private AisleMiddleWindowOptimizer aisleMiddleWindowOptimizer;
+
+    @Setter(onMethod_ = @Autowired)
+    private RowBasedOptimizer rowBasedOptimizer;
+
+    @Setter(onMethod_ = @Autowired)
+    private ZigZagOptimizer zigZagOptimizer;
+
 
 
     public static void main(String[] args) {
@@ -67,11 +74,19 @@ public class Application {
         xmlService.saveGeneratedPassengers(generatedPassengers, path);
 
         log.info("Running Basic Optimizers\n");
-        for (Optimizer optimizer : basicOptimizers) {
-            log.info("Running optimizer: {}\n", optimizer.getClass().getSimpleName());
-            OptimizerResult result = optimizer.run(plane, generatedPassengers, path, true);
-            log.info("Result: {}\n\n", result);
-        }
+
+        log.info("Running Aisle-Middle-Window Optimizer");
+        OptimizerResult aileMiddleWindowResult = aisleMiddleWindowOptimizer.run(plane, generatedPassengers, path, true);
+        log.info("Result: {}\n\n", aileMiddleWindowResult);
+
+        log.info("Running Row Based Optimizer");
+        OptimizerResult rowBasedResult = rowBasedOptimizer.run(plane, generatedPassengers, path, true);
+        log.info("Result: {}\n\n", rowBasedResult);
+
+        log.info("Running Zig Zag Optimizer");
+        OptimizerResult zigZagResult = zigZagOptimizer.run(plane, generatedPassengers, path, true);
+        log.info("Result: {}\n\n", zigZagResult);
+
 
         log.info("Running Advanced Optimizers\n");
 

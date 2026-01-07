@@ -1,5 +1,6 @@
 package put.plane.boarding.optimizing.optimizers.basic;
 
+import org.springframework.stereotype.Service;
 import put.plane.boarding.optimizing.Optimizer;
 import put.plane.boarding.optimizing.OptimizerResult;
 import put.plane.boarding.passengers.generator.Passenger;
@@ -10,11 +11,8 @@ import put.plane.boarding.simulator.simulator.frame.XMLService;
 
 import java.util.ArrayList;
 import java.util.List;
-
+@Service
 public class AisleMiddleWindowOptimizer extends Optimizer {
-    public AisleMiddleWindowOptimizer(Simulator simulator, XMLService xmlservice, PlaneFactory planeFactory) {
-        super(simulator, xmlservice, planeFactory);
-    }
 
     @Override
     public OptimizerResult run(Plane plane,List<Passenger> generatedPassengers, String path, boolean logs) {

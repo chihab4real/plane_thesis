@@ -17,9 +17,7 @@ import java.util.List;
 @Slf4j
 @Service
 public class ZigZagOptimizer extends Optimizer {
-    public ZigZagOptimizer(Simulator simulator, XMLService xmlservice, PlaneFactory planeFactory) {
-        super(simulator, xmlservice, planeFactory);
-    }
+
 
     @Override
     public OptimizerResult run(Plane plane,List<Passenger> generatedPassengers, String path, boolean logs) {

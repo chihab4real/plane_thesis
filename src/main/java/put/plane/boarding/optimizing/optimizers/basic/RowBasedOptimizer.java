@@ -1,5 +1,6 @@
 package put.plane.boarding.optimizing.optimizers.basic;
 
+import org.springframework.stereotype.Service;
 import put.plane.boarding.optimizing.Optimizer;
 import put.plane.boarding.optimizing.OptimizerResult;
 import put.plane.boarding.passengers.generator.Passenger;
@@ -12,13 +13,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+@Service
 public class RowBasedOptimizer extends Optimizer {
-    private final boolean frontToBack;
-    public RowBasedOptimizer(Simulator simulator, XMLService xmlservice, PlaneFactory planeFactory, boolean frontToBack) {
-        super(simulator, xmlservice, planeFactory);
-        this.frontToBack = frontToBack;
-    }
+    private boolean frontToBack;
+
 
     @Override
     public OptimizerResult run(Plane plane, List<Passenger> generatedPassengers, String path, boolean logs) {
