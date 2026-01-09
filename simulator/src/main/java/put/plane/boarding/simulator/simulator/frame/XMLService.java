@@ -68,7 +68,7 @@ public class XMLService {
         });
 
 
-        Path outputPath = Paths.get(path, fileName + ".xml");
+        Path outputPath = Paths.get(path,"visualizations", fileName + ".xml");
         Files.createDirectories(outputPath.getParent());
 
         Transformer transformer = TransformerFactory.newInstance().newTransformer();

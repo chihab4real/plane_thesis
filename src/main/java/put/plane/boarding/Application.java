@@ -18,14 +18,20 @@ import put.plane.boarding.passengers.generator.PassengerGenerator;
 import put.plane.boarding.simulator.plane.Plane;
 import put.plane.boarding.simulator.plane.factory.PlaneFactory;
 import put.plane.boarding.simulator.simulator.Simulator;
+import put.plane.boarding.simulator.simulator.frame.CSVService;
+import put.plane.boarding.simulator.simulator.frame.JSONService;
 import put.plane.boarding.simulator.simulator.frame.XMLService;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -36,6 +42,12 @@ public class Application {
 
     @Setter(onMethod_ = @Autowired)
     private XMLService xmlService;
+
+    @Setter(onMethod_ = @Autowired)
+    private CSVService csvService;
+
+    @Setter(onMethod_ = @Autowired)
+    private JSONService jsonService;
 
     @Setter(onMethod_ = @Autowired)
     private GeneticAlgorithmOptimizer geneticAlgorithmOptimizer;
@@ -66,26 +78,38 @@ public class Application {
 
     public void run() {
         // creating example problem
-        Plane plane = planeFactory.create(16, 6);
+        Plane plane = planeFactory.create(10, 6);
 
         String path = createDirectoryIfNotExists();
+        String flightId = "FLIGHT_" + DateFormatUtils.format(new Date(), "yyyyMMdd_HHmmss");
 
         List<Passenger> generatedPassengers = generatePassengers(plane);
         xmlService.saveGeneratedPassengers(generatedPassengers, path);
+
+        Map<String, OptimizerResult> allResults = new LinkedHashMap<>();
 
         log.info("Running Basic Optimizers\n");
 
         log.info("Running Aisle-Middle-Window Optimizer");
         OptimizerResult aileMiddleWindowResult = aisleMiddleWindowOptimizer.run(plane, generatedPassengers, path, true);
         log.info("Result: {}\n\n", aileMiddleWindowResult);
+        csvService.saveOptimizationResultsToCSV(generatedPassengers, aileMiddleWindowResult.passengerGroups(),
+                path, "AisleMiddleWindow", flightId);
+        allResults.put("AisleMiddleWindow", aileMiddleWindowResult);
 
         log.info("Running Row Based Optimizer");
         OptimizerResult rowBasedResult = rowBasedOptimizer.run(plane, generatedPassengers, path, true);
         log.info("Result: {}\n\n", rowBasedResult);
+        csvService.saveOptimizationResultsToCSV(generatedPassengers, rowBasedResult.passengerGroups(),
+                path, "BackToFront", flightId);
+        allResults.put("BackToFront", rowBasedResult);
 
         log.info("Running Zig Zag Optimizer");
         OptimizerResult zigZagResult = zigZagOptimizer.run(plane, generatedPassengers, path, true);
         log.info("Result: {}\n\n", zigZagResult);
+        csvService.saveOptimizationResultsToCSV(generatedPassengers, zigZagResult.passengerGroups(),
+                path, "Zigzag", flightId);
+        allResults.put("Zigzag", zigZagResult);
 
 
         log.info("Running Advanced Optimizers\n");
@@ -94,14 +118,36 @@ public class Application {
         OptimizerResult gaResult = geneticAlgorithmOptimizer.run(true, plane, generatedPassengers, path, 50, 20,
                 0.2, 0.8);
         log.info("Best time from GA: {}\n\n", gaResult);
+        csvService.saveOptimizationResultsToCSV(generatedPassengers, gaResult.passengerGroups(),
+                path, "GeneticAlgorithm", flightId);
+        allResults.put("GeneticAlgorithm", gaResult);
 
         log.info("Simulated Annealing Optimization\n");
         OptimizerResult saResult = simulatedAnnealingOptimizer.run(true, plane, generatedPassengers, path, 100.0, 0.995, 1000);
         log.info("Best time from SA: {}\n\n", saResult);
+        csvService.saveOptimizationResultsToCSV(generatedPassengers, saResult.passengerGroups(),
+                path, "SimulatedAnnealing", flightId);
+        allResults.put("SimulatedAnnealing", saResult);
 
         log.info("Tabu Search Optimization\n");
         OptimizerResult tsResult = tabuSearchOptimizer.run(true, plane, generatedPassengers, path, 500, 15, 20);
         log.info("Best time from TS: {}\n\n", tsResult);
+        csvService.saveOptimizationResultsToCSV(generatedPassengers, tsResult.passengerGroups(),
+                path, "TabuSearch", flightId);
+        allResults.put("TabuSearch", tsResult);
+
+        csvService.saveOptimizationSummary(List.of(
+                aileMiddleWindowResult,
+                rowBasedResult,
+                zigZagResult,
+                gaResult,
+                saResult,
+                tsResult
+        ), path, "optimization_summary", flightId);
+
+        log.info("\nSaving comprehensive JSON file with all optimization results...");
+        jsonService.saveOptimizationResultsToJSON(allResults, generatedPassengers, path, "optimization_results", flightId);
+        log.info("All results saved successfully!");
     }
 
     private String createDirectoryIfNotExists() {
@@ -127,7 +173,7 @@ public class Application {
                 plane.getRows(),
                 plane.getColumns(),
                 plane.getRows() * plane.getColumns(),
-                0,
+                50,
                 0
         );
     }

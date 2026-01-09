@@ -190,7 +190,7 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
 
-        return new OptimizerResult(time, flattenedSolution);
+        return new OptimizerResult(methodName, time, flattenedSolution, allGroups);
     }
 
 

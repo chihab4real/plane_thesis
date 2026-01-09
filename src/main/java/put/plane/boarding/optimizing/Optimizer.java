@@ -55,7 +55,7 @@ public abstract class Optimizer {
             }
         }
 
-        return new OptimizerResult(time, new ArrayList<>());
+        return new OptimizerResult(methodName, time, new ArrayList<>(), allGroups);
     }
 
     public int getTimeForOrder(Plane plane, List<List<Passenger>> passengers, String path, String methodName, boolean saveVisualization) {

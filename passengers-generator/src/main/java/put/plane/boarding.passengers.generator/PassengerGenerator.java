@@ -51,9 +51,9 @@ public class PassengerGenerator {
         for (int i =0; i<numberPassengers;i++){
             String seat = assignedSeats.get(i);
             boolean hasLuggage = luggageSet.contains(i);
-            Integer speedQueue = rand.nextInt(1,2);
+            Integer speedQueue = rand.nextInt(1,3);
             Integer speedExiting = rand.nextInt(2,3);
-            Integer luggagePickUpTime = hasLuggage ? rand.nextInt(1,2) : null;
+            Integer luggagePickUpTime = hasLuggage ? rand.nextInt(1,4) : null;
 
             String luggageLocation = null;
             if (hasLuggage) {
