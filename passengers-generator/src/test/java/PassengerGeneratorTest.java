@@ -19,8 +19,7 @@ public class PassengerGeneratorTest {
                 rowsPlane,
                 columnsPlane,
                 totalPassengers,
-                luggagePassengersPercentage,
-                0);
+                luggagePassengersPercentage);
 
         assertEquals(totalPassengers, passengers.size(), "Incorrect number of passengers generated");
 

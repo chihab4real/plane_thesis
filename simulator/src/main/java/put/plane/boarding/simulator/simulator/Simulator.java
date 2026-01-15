@@ -25,7 +25,6 @@ import static put.plane.boarding.simulator.plane.PlaneConstants.EXIT_FROM_PLANE;
 public final class Simulator {
 
     public SimulatorResponse simulate(SimulatorRequest request) {
-
         DeplainingProblem problem = request.getProblem();
         Plane plane = problem.getPlane();
         Queue queue = plane.getQueue();
@@ -38,7 +37,8 @@ public final class Simulator {
                 .map(PassengerGroup::getPassengers)
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
-        savePassengerFrames(remainingPassengers, queue, visualizationFrames);
+        if (request.isSaveVisualization())
+            savePassengerFrames(remainingPassengers, queue, visualizationFrames);
         for (PassengerGroup passengerGroup : passengerGroups) {
             List<SimulatorPassenger> passengers = new ArrayList<>(passengerGroup.getPassengers());
             remainingPassengers.removeAll(passengers);
@@ -67,9 +67,11 @@ public final class Simulator {
                     resolveCollidingPassengersWithoutAction(passengersNotMoved, plane, someCustomerHasMadeAction);
                 }
                 passengers.removeIf(p -> !p.isOnPlane());
-                List<SimulatorPassenger> passengersForFrames = new ArrayList<>(passengers);
-                passengersForFrames.addAll(remainingPassengers);
-                savePassengerFrames(passengersForFrames, queue, visualizationFrames);
+                if (request.isSaveVisualization()) {
+                    List<SimulatorPassenger> passengersForFrames = new ArrayList<>(passengers);
+                    passengersForFrames.addAll(remainingPassengers);
+                    savePassengerFrames(passengersForFrames, queue, visualizationFrames);
+                }
                 resultTime++;
             }
         }
