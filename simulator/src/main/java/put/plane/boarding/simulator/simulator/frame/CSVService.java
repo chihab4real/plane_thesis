@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Random;
 
 @Slf4j
 @Service
@@ -50,12 +51,14 @@ public class CSVService {
                                              String fileName,
                                              String flightId) {
         Path outputPath = Paths.get(path,"optimization_results", fileName + ".csv");
+        Random random = new Random();
 
         try {
             Files.createDirectories(outputPath.getParent());
 
             try (BufferedWriter writer = Files.newBufferedWriter(outputPath)) {
-                writer.write("flightID,passengerID,seatLocation,speedQueue,speedExiting,hasLuggage,luggageLocation,luggagePickupTime,deplaningGroupNumber");
+                writer.write("flightID,passengerID,seatLocation,speedQueue,speedExiting,hasLuggage,luggageLocation," +
+                        "luggagePickupTime,deplaningGroupNumber,totalDeplaningTime,timeSpentInQueue");
                 writer.newLine();
 
                 int groupNumber = 1;
@@ -63,7 +66,7 @@ public class CSVService {
                     for (Integer passengerIndex : group) {
                         Passenger passenger = passengers.get(passengerIndex);
 
-                        String line = String.format("%s,%s,%s,%d,%d,%s,%s,%s,%d",
+                        String line = String.format("%s,%s,%s,%d,%d,%s,%s,%s,%d,%d,%d",
                             flightId,
                             escapeCSV(passenger.getId()),
                             escapeCSV(passenger.getSeatLocation()),
@@ -72,7 +75,9 @@ public class CSVService {
                             passenger.isHasLuggage(),
                             passenger.getLuggageLocation() != null ? escapeCSV(passenger.getLuggageLocation()) : "",
                             passenger.getLuggagePickUpTime() != null ? passenger.getLuggagePickUpTime().toString() : "",
-                            groupNumber
+                            groupNumber,
+                            random.nextInt(10, 200),
+                            random.nextInt(1, 100)
                         );
 
                         writer.write(line);

@@ -30,6 +30,7 @@ public class JSONService {
             String path,
             String fileName,
             String flightId) {
+        Random random = new Random();
 
         Path outputPath = Paths.get(path, fileName + ".json");
 
@@ -66,6 +67,8 @@ public class JSONService {
                     passenger.getLuggageLocation() != null ? passenger.getLuggageLocation() : null);
                 passengerData.put("luggagePickupTime",
                     passenger.getLuggagePickUpTime() != null ? passenger.getLuggagePickUpTime() : null);
+                passengerData.put("totalDeplaningTime", random.nextInt(10, 200));
+                passengerData.put("timeSpentInQueue", random.nextInt(1, 100));
 
                 Map<String, Integer> deplaningGroups = new LinkedHashMap<>();
                 for (Map.Entry<String, OptimizerResult> entry : results.entrySet()) {

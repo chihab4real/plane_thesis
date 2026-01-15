@@ -78,76 +78,95 @@ public class Application {
 
     public void run() {
         // creating example problem
-        Plane plane = planeFactory.create(10, 6);
+        Plane plane = planeFactory.create(20, 6);
 
-        String path = createDirectoryIfNotExists();
-        String flightId = "FLIGHT_" + DateFormatUtils.format(new Date(), "yyyyMMdd_HHmmss");
+        for(int i=100;i>=20;i-=5) {
+            log.info("===== SIMULATION FOR {}% OF PASSENGERS WITH LUGGAGE =====", i);
+            String path = createDirectoryIfNotExists();
+            String flightId = "FLIGHT_" + DateFormatUtils.format(new Date(), "yyyyMMdd_HHmmss");
 
-        List<Passenger> generatedPassengers = generatePassengers(plane);
-        xmlService.saveGeneratedPassengers(generatedPassengers, path);
+            List<Passenger> generatedPassengers = generatePassengers(plane,i);
+            xmlService.saveGeneratedPassengers(generatedPassengers, path);
 
-        Map<String, OptimizerResult> allResults = new LinkedHashMap<>();
+            Map<String, OptimizerResult> allResults = new LinkedHashMap<>();
 
-        log.info("Running Basic Optimizers\n");
+            log.info("Running Basic Optimizers\n");
 
-        log.info("Running Aisle-Middle-Window Optimizer");
-        OptimizerResult aileMiddleWindowResult = aisleMiddleWindowOptimizer.run(plane, generatedPassengers, path, true);
-        log.info("Result: {}\n\n", aileMiddleWindowResult);
-        csvService.saveOptimizationResultsToCSV(generatedPassengers, aileMiddleWindowResult.passengerGroups(),
-                path, "AisleMiddleWindow", flightId);
-        allResults.put("AisleMiddleWindow", aileMiddleWindowResult);
+            log.info("Running Aisle-Middle-Window Optimizer");
+            OptimizerResult aileMiddleWindowResult = aisleMiddleWindowOptimizer.run(plane, generatedPassengers, path, false);
+            log.info("Result: {}\n\n", aileMiddleWindowResult);
+            csvService.saveOptimizationResultsToCSV(generatedPassengers, aileMiddleWindowResult.passengerGroups(),
+                    path, "AisleMiddleWindow", flightId);
+            allResults.put("AisleMiddleWindow", aileMiddleWindowResult);
+            log.info("==Aisle-Middle-Window optimization completed.==\n");
 
-        log.info("Running Row Based Optimizer");
-        OptimizerResult rowBasedResult = rowBasedOptimizer.run(plane, generatedPassengers, path, true);
-        log.info("Result: {}\n\n", rowBasedResult);
-        csvService.saveOptimizationResultsToCSV(generatedPassengers, rowBasedResult.passengerGroups(),
-                path, "BackToFront", flightId);
-        allResults.put("BackToFront", rowBasedResult);
+            log.info("Running FrontToBack Optimizer");
+            rowBasedOptimizer.setFrontToBack(true);
+            OptimizerResult frontToBackResult = rowBasedOptimizer.run(plane, generatedPassengers, path, false);
+            log.info("Result: {}\n\n", frontToBackResult);
+            csvService.saveOptimizationResultsToCSV(generatedPassengers, frontToBackResult.passengerGroups(),
+                    path, "FrontToBack", flightId);
+            allResults.put("FrontToBack", frontToBackResult);
+            log.info("==FrontToBack optimization completed.==\n");
 
-        log.info("Running Zig Zag Optimizer");
-        OptimizerResult zigZagResult = zigZagOptimizer.run(plane, generatedPassengers, path, true);
-        log.info("Result: {}\n\n", zigZagResult);
-        csvService.saveOptimizationResultsToCSV(generatedPassengers, zigZagResult.passengerGroups(),
-                path, "Zigzag", flightId);
-        allResults.put("Zigzag", zigZagResult);
+            log.info("Running BackToFront Optimizer");
+            rowBasedOptimizer.setFrontToBack(false);
+            OptimizerResult rowBasedResult = rowBasedOptimizer.run(plane, generatedPassengers, path, false);
+            log.info("Result: {}\n\n", rowBasedResult);
+            csvService.saveOptimizationResultsToCSV(generatedPassengers, rowBasedResult.passengerGroups(),
+                    path, "BackToFront", flightId);
+            allResults.put("BackToFront", rowBasedResult);
+            log.info("==BackToFront optimization completed.==\n");
+
+            log.info("Running Zig Zag Optimizer");
+            OptimizerResult zigZagResult = zigZagOptimizer.run(plane, generatedPassengers, path, false);
+            log.info("Result: {}\n\n", zigZagResult);
+            csvService.saveOptimizationResultsToCSV(generatedPassengers, zigZagResult.passengerGroups(),
+                    path, "Zigzag", flightId);
+            allResults.put("Zigzag", zigZagResult);
+            log.info("==Zig Zag optimization completed.==\n");
 
 
-        log.info("Running Advanced Optimizers\n");
+            log.info("Running Advanced Optimizers\n");
 
-        log.info("Genetic Algorithm Optimization\n");
-        OptimizerResult gaResult = geneticAlgorithmOptimizer.run(true, plane, generatedPassengers, path, 50, 20,
-                0.2, 0.8);
-        log.info("Best time from GA: {}\n\n", gaResult);
-        csvService.saveOptimizationResultsToCSV(generatedPassengers, gaResult.passengerGroups(),
-                path, "GeneticAlgorithm", flightId);
-        allResults.put("GeneticAlgorithm", gaResult);
+            log.info("Genetic Algorithm Optimization\n");
+            OptimizerResult gaResult = geneticAlgorithmOptimizer.run(false, plane, generatedPassengers, path, 50, 20,
+                    0.2, 0.8);
+            log.info("Best time from GA: {}\n\n", gaResult);
+            csvService.saveOptimizationResultsToCSV(generatedPassengers, gaResult.passengerGroups(),
+                    path, "GeneticAlgorithm", flightId);
+            allResults.put("GeneticAlgorithm", gaResult);
+            log.info("==Genetic Algorithm optimization completed.==\n");
 
-        log.info("Simulated Annealing Optimization\n");
-        OptimizerResult saResult = simulatedAnnealingOptimizer.run(true, plane, generatedPassengers, path, 100.0, 0.995, 1000);
-        log.info("Best time from SA: {}\n\n", saResult);
-        csvService.saveOptimizationResultsToCSV(generatedPassengers, saResult.passengerGroups(),
-                path, "SimulatedAnnealing", flightId);
-        allResults.put("SimulatedAnnealing", saResult);
+            log.info("Simulated Annealing Optimization\n");
+            OptimizerResult saResult = simulatedAnnealingOptimizer.run(false, plane, generatedPassengers, path, 100.0, 0.995, 1000);
+            log.info("Best time from SA: {}\n\n", saResult);
+            csvService.saveOptimizationResultsToCSV(generatedPassengers, saResult.passengerGroups(),
+                    path, "SimulatedAnnealing", flightId);
+            allResults.put("SimulatedAnnealing", saResult);
+            log.info("==Simulated Annealing optimization completed.==\n");
 
-        log.info("Tabu Search Optimization\n");
-        OptimizerResult tsResult = tabuSearchOptimizer.run(true, plane, generatedPassengers, path, 500, 15, 20);
-        log.info("Best time from TS: {}\n\n", tsResult);
-        csvService.saveOptimizationResultsToCSV(generatedPassengers, tsResult.passengerGroups(),
-                path, "TabuSearch", flightId);
-        allResults.put("TabuSearch", tsResult);
+            log.info("Tabu Search Optimization\n");
+            OptimizerResult tsResult = tabuSearchOptimizer.run(false, plane, generatedPassengers, path, 500, 15, 20);
+            log.info("Best time from TS: {}\n\n", tsResult);
+            csvService.saveOptimizationResultsToCSV(generatedPassengers, tsResult.passengerGroups(),
+                    path, "TabuSearch", flightId);
+            allResults.put("TabuSearch", tsResult);
+            log.info("==Tabu Search optimization completed.==\n");
 
-        csvService.saveOptimizationSummary(List.of(
-                aileMiddleWindowResult,
-                rowBasedResult,
-                zigZagResult,
-                gaResult,
-                saResult,
-                tsResult
-        ), path, "optimization_summary", flightId);
+            csvService.saveOptimizationSummary(List.of(
+                    aileMiddleWindowResult,
+                    rowBasedResult,
+                    zigZagResult,
+                    gaResult,
+                    saResult,
+                    tsResult
+            ), path, "optimization_summary", flightId);
 
-        log.info("\nSaving comprehensive JSON file with all optimization results...");
-        jsonService.saveOptimizationResultsToJSON(allResults, generatedPassengers, path, "optimization_results", flightId);
-        log.info("All results saved successfully!");
+            log.info("\nSaving comprehensive JSON file with all optimization results...");
+            jsonService.saveOptimizationResultsToJSON(allResults, generatedPassengers, path, "optimization_results", flightId);
+            log.info("All results saved successfully!");
+        }
     }
 
     private String createDirectoryIfNotExists() {
@@ -168,13 +187,12 @@ public class Application {
     }
 
 
-    private List<Passenger> generatePassengers(Plane plane) {
+    private List<Passenger> generatePassengers(Plane plane, int passengersLuggagePercentage) {
         return PassengerGenerator.generatePassengers(
                 plane.getRows(),
                 plane.getColumns(),
                 plane.getRows() * plane.getColumns(),
-                50,
-                0
+                passengersLuggagePercentage
         );
     }
 

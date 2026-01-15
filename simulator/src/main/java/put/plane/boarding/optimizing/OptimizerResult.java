@@ -8,4 +8,3 @@ public record OptimizerResult(
         List<Integer> bestSolution,
         List<List<Integer>> passengerGroups
 ) {}
-
