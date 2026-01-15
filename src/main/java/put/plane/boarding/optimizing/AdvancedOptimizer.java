@@ -50,7 +50,7 @@ public class AdvancedOptimizer extends Optimizer {
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
 
-        return new OptimizerResult(time, flattenedSolution);
+        return new OptimizerResult(methodName, time, flattenedSolution, allGroups);
     }
 
     @Override

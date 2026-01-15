@@ -5,9 +5,6 @@ import put.plane.boarding.optimizing.Optimizer;
 import put.plane.boarding.optimizing.OptimizerResult;
 import put.plane.boarding.passengers.generator.Passenger;
 import put.plane.boarding.simulator.plane.Plane;
-import put.plane.boarding.simulator.plane.factory.PlaneFactory;
-import put.plane.boarding.simulator.simulator.Simulator;
-import put.plane.boarding.simulator.simulator.frame.XMLService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,7 +13,6 @@ import java.util.Map;
 @Service
 public class RowBasedOptimizer extends Optimizer {
     private boolean frontToBack;
-
 
     @Override
     public OptimizerResult run(Plane plane, List<Passenger> generatedPassengers, String path, boolean logs) {
@@ -48,5 +44,9 @@ public class RowBasedOptimizer extends Optimizer {
 
 
         return runOptimization(plane, logs, path, type, description, allGroups, generatedPassengers, true);
+    }
+
+    public void setFrontToBack(boolean frontToBack) {
+        this.frontToBack = frontToBack;
     }
 }

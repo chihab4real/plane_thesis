@@ -30,8 +30,8 @@ public class GeneticAlgorithmOptimizer extends AdvancedOptimizer {
 
         for (List<List<Integer>> individual : population) {
             if (!isValidIndividual(individual, totalPassengers)) {
-                log.error("Invalid individual in initial population!");
-                return new OptimizerResult(Integer.MAX_VALUE, new ArrayList<>());
+//                log.error("Invalid individual in initial population!");
+                return new OptimizerResult("", Integer.MAX_VALUE, new ArrayList<>(), new ArrayList<>());
             }
         }
 
@@ -40,7 +40,7 @@ public class GeneticAlgorithmOptimizer extends AdvancedOptimizer {
 
         for (int gen = 0; gen < generations; gen++) {
             long genStart = System.currentTimeMillis();
-            log.info("Starting generation {}/{}", gen, generations);
+            //log.info("Starting generation {}/{}", gen, generations);
 
             List<IndividualFitness> evaluated = new ArrayList<>();
             for (List<List<Integer>> individual : population) {
@@ -51,13 +51,13 @@ public class GeneticAlgorithmOptimizer extends AdvancedOptimizer {
                     bestTime = fitness;
                     bestSolution = deepCopyIndices(individual);
                     if (logs) {
-                        log.info("Gen {}: New best = {}", gen, bestTime);
+//                        log.info("Gen {}: New best = {}", gen, bestTime);
                     }
                 }
             }
 
             if (evaluated.isEmpty()) {
-                log.error("No valid individuals in generation {}", gen);
+//                log.error("No valid individuals in generation {}", gen);
                 break;
             }
 
@@ -95,12 +95,12 @@ public class GeneticAlgorithmOptimizer extends AdvancedOptimizer {
                 log.info("Gen {}/{} - Best so far: {}", gen, generations, bestTime);
             }
             long genTime = System.currentTimeMillis() - genStart;
-            log.info("Generation {} completed in {} seconds", gen, genTime / 1000.0);
+//            log.info("Generation {} completed in {} seconds", gen, genTime / 1000.0);
         }
 
         if (bestSolution == null) {
-            log.error("No solution found!");
-            return new OptimizerResult(Integer.MAX_VALUE, new ArrayList<>());
+//            log.error("No solution found!");
+            return new OptimizerResult("", Integer.MAX_VALUE, new ArrayList<>(), new ArrayList<>());
         }
 
         if (logs) {
