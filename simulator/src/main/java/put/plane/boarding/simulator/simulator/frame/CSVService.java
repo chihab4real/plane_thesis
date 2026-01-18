@@ -107,4 +107,39 @@ public class CSVService {
         return value;
     }
 
+    public void savePassengersToCsv(List<Passenger> passengers, String path) {
+        Path outputPath = Paths.get(path, "generated_passengers.csv");
+
+        try {
+            Files.createDirectories(outputPath.getParent());
+
+            try (BufferedWriter writer = Files.newBufferedWriter(outputPath)) {
+                writer.write("passengerID,seatLocation,speedQueue,speedExiting,hasLuggage,luggageLocation,luggagePickupTime");
+                writer.newLine();
+
+                for (Passenger p : passengers) {
+                    String line = String.format("%s,%s,%d,%d,%s,%s,%s",
+                            escapeCSV(p.getId()),
+                            escapeCSV(p.getSeatLocation()),
+                            p.getSpeedQueue(),
+                            p.getSpeedExiting(),
+                            p.isHasLuggage(),
+                            p.getLuggageLocation() != null ? escapeCSV(p.getLuggageLocation()) : "",
+                            p.getLuggagePickUpTime() != null ? p.getLuggagePickUpTime().toString() : ""
+                    );
+
+                    writer.write(line);
+                    writer.newLine();
+                }
+            }
+
+            log.info("Generated passengers CSV file saved successfully at: {}", outputPath.toAbsolutePath());
+
+        } catch (IOException e) {
+            log.error("Failed to save generated passengers CSV file: {}", outputPath, e);
+            throw new RuntimeException("Could not save generated passengers CSV file", e);
+        }
+
+    }
+
 }
