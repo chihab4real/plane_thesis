@@ -54,6 +54,7 @@ class SimulatorTest {
         SimulatorRequest simulatorRequest = new SimulatorRequest(deplainingProblem);
         SimulatorResponse simulatorResponse = simulator.simulate(simulatorRequest);
         assertEquals(4, simulatorResponse.time());
+        verifyWaitingTimeMatches(simulatorResponse);
     }
 
     @Test
@@ -76,6 +77,7 @@ class SimulatorTest {
         SimulatorRequest simulatorRequest = new SimulatorRequest(deplainingProblem);
         SimulatorResponse simulatorResponse = simulator.simulate(simulatorRequest);
         assertEquals(8, simulatorResponse.time());
+        verifyWaitingTimeMatches(simulatorResponse);
     }
 
     @Test
@@ -104,6 +106,7 @@ class SimulatorTest {
         SimulatorRequest simulatorRequest = new SimulatorRequest(deplainingProblem);
         SimulatorResponse simulatorResponse = simulator.simulate(simulatorRequest);
         assertEquals(14, simulatorResponse.time());
+        verifyWaitingTimeMatches(simulatorResponse);
     }
 
     @Test
@@ -127,6 +130,7 @@ class SimulatorTest {
         SimulatorResponse simulatorResponse = simulator.simulate(simulatorRequest);
 
         assertEquals(4, simulatorResponse.time());
+        verifyWaitingTimeMatches(simulatorResponse);
     }
 
     @Test
@@ -154,6 +158,7 @@ class SimulatorTest {
         SimulatorResponse simulatorResponse = simulator.simulate(simulatorRequest);
 
         assertEquals(12, simulatorResponse.time());
+        verifyWaitingTimeMatches(simulatorResponse);
     }
 
     @Test
@@ -195,6 +200,7 @@ class SimulatorTest {
         SimulatorRequest simulatorRequest = new SimulatorRequest(deplainingProblem);
         SimulatorResponse simulatorResponse = simulator.simulate(simulatorRequest);
         assertEquals(71, simulatorResponse.time());
+        verifyWaitingTimeMatches(simulatorResponse);
     }
 
     @Test
@@ -218,6 +224,7 @@ class SimulatorTest {
         SimulatorRequest simulatorRequest = new SimulatorRequest(deplainingProblem);
         SimulatorResponse simulatorResponse = simulator.simulate(simulatorRequest);
         assertEquals(6, simulatorResponse.time());
+        verifyWaitingTimeMatches(simulatorResponse);
     }
 
     @Test
@@ -241,6 +248,7 @@ class SimulatorTest {
         SimulatorRequest simulatorRequest = new SimulatorRequest(deplainingProblem);
         SimulatorResponse simulatorResponse = simulator.simulate(simulatorRequest);
         assertEquals(12, simulatorResponse.time());
+        verifyWaitingTimeMatches(simulatorResponse);
     }
 
     @Test
@@ -264,6 +272,7 @@ class SimulatorTest {
         SimulatorRequest simulatorRequest = new SimulatorRequest(deplainingProblem);
         SimulatorResponse simulatorResponse = simulator.simulate(simulatorRequest);
         assertEquals(32, simulatorResponse.time());
+        verifyWaitingTimeMatches(simulatorResponse);
     }
 
     @Test
@@ -307,6 +316,7 @@ class SimulatorTest {
         SimulatorResponse simulatorResponse = simulator.simulate(simulatorRequest);
         xmlService.saveVisualization(simulatorResponse.visualizationDto(), "C:\\Users\\venkm\\Desktop\\projects\\plane-boarding\\plane-thesis", "test");
         assertEquals(166, simulatorResponse.time());
+        verifyWaitingTimeMatches(simulatorResponse);
     }
 
     @Test
@@ -333,6 +343,7 @@ class SimulatorTest {
         SimulatorRequest simulatorRequest = new SimulatorRequest(deplainingProblem);
         SimulatorResponse simulatorResponse = simulator.simulate(simulatorRequest);
         assertEquals(32, simulatorResponse.time());
+        verifyWaitingTimeMatches(simulatorResponse);
     }
 
     @Test
@@ -376,5 +387,10 @@ class SimulatorTest {
         SimulatorResponse simulatorResponse = simulator.simulate(simulatorRequest);
         xmlService.saveVisualization(simulatorResponse.visualizationDto(), "C:\\Users\\venkm\\Desktop\\projects\\plane-boarding\\plane-thesis", "test");
         assertEquals(137, simulatorResponse.time());
+        verifyWaitingTimeMatches(simulatorResponse);
+    }
+
+    private void verifyWaitingTimeMatches(SimulatorResponse simulatorResponse) {
+        assertEquals(simulatorResponse.totalTimeWastedWithoutMove(), simulatorResponse.waitCount().values().stream().mapToLong(Long::longValue).sum());
     }
 }

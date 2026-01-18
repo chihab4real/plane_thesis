@@ -6,6 +6,7 @@ import put.plane.boarding.simulator.passenger.SimulatorPassenger;
 import put.plane.boarding.simulator.passenger.action.Action;
 import put.plane.boarding.simulator.passenger.action.ActionResult;
 import put.plane.boarding.simulator.plane.Plane;
+import put.plane.boarding.simulator.plane.structure.Seat;
 import put.plane.boarding.simulator.plane.structure.queue.Queue;
 import put.plane.boarding.simulator.problem.DeplainingProblem;
 import put.plane.boarding.simulator.problem.PassengerGroup;
@@ -30,6 +31,7 @@ public final class Simulator {
         int resultTime = 0;
         List<SingleFrame> visualizationFrames = new ArrayList<>();
         long totalTimeWasted = 0;
+        Map<Seat, Long> waitCount = new HashMap<>();
 
         List<SimulatorPassenger> remainingPassengers = passengerGroups
                 .stream()
@@ -41,6 +43,7 @@ public final class Simulator {
         for (PassengerGroup passengerGroup : passengerGroups) {
             List<SimulatorPassenger> passengers = new ArrayList<>(passengerGroup.getPassengers());
             remainingPassengers.removeAll(passengers);
+            passengers.forEach(p -> waitCount.put(p.startSeat(), 0L));
             while (!passengers.isEmpty()) {
                 AtomicBoolean someCustomerHasMadeAction = new AtomicBoolean(true);
                 List<SimulatorPassenger> passengersNotMoved = new ArrayList<>(passengers);
@@ -71,6 +74,7 @@ public final class Simulator {
                 totalTimeWasted += passengersNotMoved.stream()
                         .filter(p -> !p.isDuringAction())
                         .count();
+                passengersNotMoved.forEach(p -> waitCount.put(p.startSeat(), waitCount.get(p.startSeat()) + 1));
                 resultTime++;
             }
         }
@@ -79,6 +83,7 @@ public final class Simulator {
                 .time(resultTime)
                 .visualizationDto(new VisualizationDto(plane, visualizationFrames))
                 .totalTimeWastedWithoutMove(totalTimeWasted)
+                .waitCount(waitCount)
                 .build();
     }
 
