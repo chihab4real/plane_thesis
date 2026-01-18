@@ -29,6 +29,7 @@ public final class Simulator {
         List<PassengerGroup> passengerGroups = new ArrayList<>(problem.getPassengers());
         int resultTime = 0;
         List<SingleFrame> visualizationFrames = new ArrayList<>();
+        long totalTimeWasted = 0;
 
         List<SimulatorPassenger> remainingPassengers = passengerGroups
                 .stream()
@@ -65,11 +66,11 @@ public final class Simulator {
                     resolveCollidingPassengersWithoutAction(passengersNotMoved, plane, someCustomerHasMadeAction);
                 }
                 passengers.removeIf(p -> !p.isOnPlane());
-                if (request.isSaveVisualization()) {
-                    List<SimulatorPassenger> passengersForFrames = new ArrayList<>(passengers);
-                    passengersForFrames.addAll(remainingPassengers);
-                    savePassengerFrames(passengersForFrames, queue, visualizationFrames);
-                }
+                if (request.isSaveVisualization())
+                    updateVisualization(passengers, remainingPassengers, queue, visualizationFrames);
+                totalTimeWasted += passengersNotMoved.stream()
+                        .filter(p -> !p.isDuringAction())
+                        .count();
                 resultTime++;
             }
         }
@@ -77,7 +78,14 @@ public final class Simulator {
         return SimulatorResponse.builder()
                 .time(resultTime)
                 .visualizationDto(new VisualizationDto(plane, visualizationFrames))
+                .totalTimeWastedWithoutMove(totalTimeWasted)
                 .build();
+    }
+
+    private void updateVisualization(List<SimulatorPassenger> passengers, List<SimulatorPassenger> remainingPassengers, Queue queue, List<SingleFrame> visualizationFrames) {
+        List<SimulatorPassenger> passengersForFrames = new ArrayList<>(passengers);
+        passengersForFrames.addAll(remainingPassengers);
+        savePassengerFrames(passengersForFrames, queue, visualizationFrames);
     }
 
     private void resolveCollidingPassengersWithoutAction(List<SimulatorPassenger> passengersNotMoved, Plane plane, AtomicBoolean someCustomerHasMadeAction) {

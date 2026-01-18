@@ -6,5 +6,7 @@ import put.plane.boarding.simulator.simulator.frame.dto.VisualizationDto;
 @Builder
 public record SimulatorResponse(
         int time,
-        VisualizationDto visualizationDto
-) {}
+        VisualizationDto visualizationDto,
+        long totalTimeWastedWithoutMove
+) {
+}
