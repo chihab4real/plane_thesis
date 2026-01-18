@@ -11,8 +11,6 @@ import put.plane.boarding.simulator.plane.structure.queue.Queue;
 
 import java.util.Objects;
 
-import static put.plane.boarding.simulator.plane.PlaneConstants.EXIT_FROM_PLANE;
-
 public class DefaultPassenger implements SimulatorPassenger {
 
     @Setter
@@ -48,7 +46,7 @@ public class DefaultPassenger implements SimulatorPassenger {
                             () -> passengersOnSeats.onPassengerOffSeat(this),
                             () -> queue.isSpotFree(seat.row())
                     );
-                    return ActionResult.nonBlockedAction(result);
+                    return ActionResult.nonBlockedAction(result, seat.row());
                 }
                 if (passengersOnSeats.isPassengerStuckInSeat(this)) {
                     Action result = new Action(
@@ -57,28 +55,28 @@ public class DefaultPassenger implements SimulatorPassenger {
                             () -> passengersOnSeats.onPassengerOffSeat(this),
                             () -> queue.isSpotFree(seat.row())
                     );
-                    return ActionResult.nonBlockedAction(result);
+                    return ActionResult.nonBlockedAction(result, seat.row());
                 }
             }
-            return ActionResult.blockedAction(seat.row());
+            return ActionResult.blockedAction(seat.row(), seat.row());
         }
-
-        int nextStep = queue.stepInDirection(this, EXIT_FROM_PLANE);
+        int closerExit = queue.closerExit(positionInQueue);
+        int nextStep = queue.stepInDirection(this, closerExit);
         if (queue.isSpotAvailable(nextStep)) {
             Action result = new Action(
                     nextStep,
                     movingDuration,
                     () -> {
                         queue.releaseSpot(this);
-                        if (nextStep == EXIT_FROM_PLANE) {
+                        if (nextStep == closerExit) {
                             onLeavePlane();
                         }
                     },
                     () -> queue.isSpotFree(nextStep)
             );
-            return ActionResult.nonBlockedAction(result);
+            return ActionResult.nonBlockedAction(result, closerExit);
         }
-        return ActionResult.blockedAction(nextStep);
+        return ActionResult.blockedAction(nextStep, closerExit);
     }
 
     @Override

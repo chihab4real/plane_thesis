@@ -18,8 +18,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-import static put.plane.boarding.simulator.plane.PlaneConstants.EXIT_FROM_PLANE;
-
 @Service
 @RequiredArgsConstructor
 public final class Simulator {
@@ -129,7 +127,7 @@ public final class Simulator {
         List<SimulatorPassenger> passengersWithAction = passengersNotMoved.stream()
                 .filter(p -> p.toAction() != null
                         && p.toAction().isOverWaiting()
-                        && p.toAction().getDirection() != EXIT_FROM_PLANE
+                        && !queue.isExitPosition(p.toAction().getDirection())
                         && queue.findPassenger(p) != -1)
                 .toList();
         Set<SimulatorPassenger> otherResolved = new HashSet<>();
@@ -166,7 +164,7 @@ public final class Simulator {
         Action action = passenger.toAction();
         if (action.isOver()) {
             passenger.onActionComplete();
-            if (action.getDirection() != EXIT_FROM_PLANE) {
+            if (!queue.isExitPosition(action.getDirection())) {
                 queue.takeSpot(passenger, action.getDirection());
             }
             return true;

@@ -7,8 +7,6 @@ import put.plane.boarding.simulator.plane.Plane;
 import put.plane.boarding.simulator.plane.structure.queue.Queue;
 import put.plane.boarding.simulator.utils.ActionUtils;
 
-import static put.plane.boarding.simulator.plane.PlaneConstants.EXIT_FROM_PLANE;
-
 public class BaggagePassenger extends PassengerDecorator {
 
     private final int baggageLocation;
@@ -26,7 +24,7 @@ public class BaggagePassenger extends PassengerDecorator {
     public ActionResult chooseAction(Plane plane) {
         ActionResult bestAction = passenger.chooseAction(plane);
         ActionResult newAction = baggageAction(plane);
-        return ActionUtils.chooseBetterAction(bestAction, newAction);
+        return ActionUtils.chooseBetterAction(bestAction, newAction, plane.getQueue(), this);
     }
 
     private ActionResult baggageAction(Plane plane) {
@@ -38,19 +36,19 @@ public class BaggagePassenger extends PassengerDecorator {
         if (positionInQueue >= 0) {
             if (positionInQueue == baggageLocation) {
                 Action result = new Action(positionInQueue, baggagePickDuration, this::onBaggagePicked);
-                return ActionResult.nonBlockedAction(result);
+                return ActionResult.nonBlockedAction(result, baggageLocation);
             }
-            int nextPosition = queue.stepInDirection(this, baggageLocation);
-            if (queue.isSpotAvailable(nextPosition)) {
-                Action result = new Action(nextPosition, toMovingDuration(), () -> {
-                    queue.releaseSpot(this);
-                    if (nextPosition == EXIT_FROM_PLANE) {
-                        onLeavePlane();
-                    }
-                });
-                return ActionResult.nonBlockedAction(result);
+            int nextStep = queue.stepInDirection(this, baggageLocation);
+            if (queue.isSpotAvailable(nextStep)) {
+                Action result = new Action(
+                        nextStep,
+                        toMovingDuration(),
+                        () -> queue.releaseSpot(this),
+                        () -> queue.isSpotFree(nextStep)
+                );
+                return ActionResult.nonBlockedAction(result, baggageLocation);
             }
-            return ActionResult.blockedAction(nextPosition);
+            return ActionResult.blockedAction(nextStep, baggageLocation);
         }
 
         return ActionResult.NO_ACTION;

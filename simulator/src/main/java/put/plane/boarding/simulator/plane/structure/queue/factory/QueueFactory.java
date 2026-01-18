@@ -11,12 +11,13 @@ import java.util.List;
 @UtilityClass
 public class QueueFactory {
 
-    public static Queue create(int size) {
+    public static Queue create(int size, boolean doubleExit) {
         List<PassengerDecorator> queueList = Arrays
                 .stream(new PassengerDecorator[size])
                 .toList();
         return Queue.builder()
                 .size(size)
+                .doubleExit(doubleExit)
                 .queueArray(new ArrayList<>(queueList))
                 .queueLocks(new ArrayList<>(queueList))
                 .build();

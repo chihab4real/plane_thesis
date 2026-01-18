@@ -13,14 +13,18 @@ public class PlaneFactory {
 
     private final FileFactory fileFactory;
 
-    public Plane create(int numberOfRows, int numberOfColumns) {
+    public Plane create(int numberOfRows, int numberOfColumns, boolean doubleExit) {
 
         return Plane.builder()
                 .rows(numberOfRows)
-                .queue(QueueFactory.create(numberOfRows))
+                .queue(QueueFactory.create(numberOfRows, doubleExit))
                 .passengersOnSeats(new PassengersOnSeats())
                 .files(fileFactory.create(numberOfColumns))
                 .build();
 
+    }
+
+    public Plane create(int numberOfRows, int numberOfColumns) {
+        return create(numberOfRows, numberOfColumns, false);
     }
 }

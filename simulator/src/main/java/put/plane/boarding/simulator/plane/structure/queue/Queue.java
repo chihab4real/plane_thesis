@@ -3,6 +3,7 @@ package put.plane.boarding.simulator.plane.structure.queue;
 import lombok.Builder;
 import lombok.Data;
 import put.plane.boarding.simulator.passenger.SimulatorPassenger;
+import put.plane.boarding.simulator.plane.PlaneConstants;
 
 import java.util.List;
 
@@ -11,16 +12,17 @@ import java.util.List;
 public class Queue {
 
     private final int size;
+    private final boolean doubleExit;
     private final List<SimulatorPassenger> queueArray;
     private final List<SimulatorPassenger> queueLocks;
 
     public boolean isSpotAvailable(int position) {
-        return position < 0
+        return isExitPosition(position)
                 || queueLocks.get(position) == null && isPassengerDuringMovingOrNull(queueArray.get(position));
     }
 
     public boolean isSpotFree(int position) {
-        return position < 0 || queueArray.get(position) == null;
+        return isExitPosition(position) || queueArray.get(position) == null;
     }
 
     public void takeSpot(SimulatorPassenger passenger, int position) {
@@ -29,14 +31,14 @@ public class Queue {
     }
 
     public void lockSpot(SimulatorPassenger passenger, int position) {
-        if (position >= 0) {
+        if (!isExitPosition(position)) {
             queueLocks.set(position, passenger.rootPassenger());
         }
     }
 
     public void releaseSpot(SimulatorPassenger passenger) {
         int position = findPassenger(passenger);
-        if (position >= 0) {
+        if (!isExitPosition(position)) {
             queueArray.set(position, null);
         }
     }
@@ -65,5 +67,16 @@ public class Queue {
 
     public SimulatorPassenger getPassengerAt(int position) {
         return queueArray.get(position);
+    }
+
+    public int closerExit(int position) {
+        int leftDistance = position - PlaneConstants.EXIT_FROM_PLANE;
+        int rightDistance = queueArray.size() - position;
+
+        return doubleExit && rightDistance < leftDistance ? queueArray.size() : PlaneConstants.EXIT_FROM_PLANE;
+    }
+
+    public boolean isExitPosition(int position) {
+        return position < 0 || doubleExit && position >= queueArray.size();
     }
 }
