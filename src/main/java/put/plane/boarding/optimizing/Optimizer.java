@@ -59,7 +59,7 @@ public abstract class Optimizer {
     }
 
     public int getTimeForOrder(Plane plane, List<List<Passenger>> passengers, String path, String methodName, boolean saveVisualization) {
-        Plane freshPlane = planeFactory.create(plane.getRows(), plane.getColumns());
+        Plane freshPlane = planeFactory.create(plane.getRows(), plane.getColumns(), plane.getQueue().isDoubleExit());
 
         List<PassengerGroup> currPassengers = PassengerFactory.createSimulatorPassengers(freshPlane, passengers);
         freshPlane.boardPassengers(currPassengers);
