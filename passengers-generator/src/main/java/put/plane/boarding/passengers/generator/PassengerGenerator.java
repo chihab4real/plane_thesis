@@ -151,30 +151,36 @@ public class PassengerGenerator {
         return (overflowPoints / peopleWithCabinLuggagePercentage) * 100;
     }
 
-    private static void savePassengersToCsv(List<Passenger> passengers, String path) {
-        Path outputPath = Paths.get(path, "generated_passengers.csv");
+    private static void saveFlightsDataCSV(List<Flight> flights) {
+        Path outputPath = Paths.get("generated_flights/", "generated_passengers.csv");
 
         try {
             Files.createDirectories(outputPath.getParent());
 
             try (BufferedWriter writer = Files.newBufferedWriter(outputPath)) {
-                writer.write("passengerID,seatLocation,speedQueue,speedExiting,hasLuggage,luggageLocation,luggagePickupTime");
+                writer.write("flightNumber,planeRows,planeColumns,totalPassengers,luggagePercentage,doubleExit," +
+                        "passengerID,seatLocation,speedQueue,speedExiting,hasLuggage,luggageLocation,luggagePickupTime");
                 writer.newLine();
 
-                for (Passenger p : passengers) {
-                    String line = String.format("%s,%s,%d,%d,%s,%s,%s",
-                            escapeCSV(p.getId()),
-                            escapeCSV(p.getSeatLocation()),
-                            p.getSpeedQueue(),
-                            p.getSpeedExiting(),
-                            p.isHasLuggage(),
-                            p.getLuggageLocation() != null ? escapeCSV(p.getLuggageLocation()) : "",
-                            p.getLuggagePickUpTime() != null ? p.getLuggagePickUpTime().toString() : ""
-                    );
-
-                    writer.write(line);
-                    writer.newLine();
+                for (Flight flight : flights) {
+                    for (Passenger passenger : flight.getPassengers()) {
+                        writer.write(flight.getFlightNumber() + "," +
+                                flight.getPlaneRows() + "," +
+                                flight.getPlaneColumns() + "," +
+                                flight.getTotalPassengers() + "," +
+                                flight.getLuggagePercentage() + "," +
+                                flight.isDoubleExit() + "," +
+                                passenger.getId() + "," +
+                                escapeCSV(passenger.getSeatLocation()) + "," +
+                                passenger.getSpeedQueue() + "," +
+                                passenger.getSpeedExiting() + "," +
+                                passenger.isHasLuggage() + "," +
+                                escapeCSV(passenger.getLuggageLocation()) + "," +
+                                (passenger.getLuggagePickUpTime() != null ? passenger.getLuggagePickUpTime() : ""));
+                        writer.newLine();
+                    }
                 }
+
             }
 
             System.out.println("Generated passengers CSV file saved successfully at: " + outputPath.toAbsolutePath());
@@ -197,31 +203,71 @@ public class PassengerGenerator {
 
     public static void main(String[] args) {
 
-        List<List<Passenger>> allPassengers = new ArrayList<>();
+        List<Flight> flights = new ArrayList<>();
         int[] numberOfRowsInPlane = {20, 30};
         //int[] numberOfColumnsInPlane = {4, 6};
         int[] luggagePercentages = {0, 15, 30, 45, 60, 75, 90, 100};
+        boolean[] doubleExitOptions = {false, true};
 
-        for(int i=0;i<50;i++){
-            for (int row : numberOfRowsInPlane){
-                for (int percentage: luggagePercentages){
-                    int numberOfColumnsInPlane = (row == 20) ? 4 : 6;
+        for(int rows: numberOfRowsInPlane){
+            int numberOfColumnsInPlane = (rows == 20) ? 4 : 6;
 
-                    List<Passenger> generatedPassengers = generatePassengers(
-                            row,
-                            numberOfColumnsInPlane,
-                            row * numberOfColumnsInPlane,
-                            percentage);
+            if (numberOfColumnsInPlane == 4){
+                for (int luggagePercentage : luggagePercentages){
+                    for (int i=0;i<50;i++){
 
-                    String path = "passengers_data/rows_" + row + "_cols_" + numberOfColumnsInPlane + "_luggage_" + percentage + "/set_" + (i + 1) + ".csv";
-                    savePassengersToCsv(generatedPassengers, path);
-                    allPassengers.add(generatedPassengers);
+                        String flightNumber = "F"+UUID.randomUUID().toString().substring(0,8).toUpperCase();
+                        List<Passenger> passengers = generatePassengers(
+                                rows,
+                                numberOfColumnsInPlane,
+                                rows * numberOfColumnsInPlane,
+                                luggagePercentage
+                        );
+
+                        Flight flight = new Flight(
+                                flightNumber,
+                                rows,
+                                numberOfColumnsInPlane,
+                                rows * numberOfColumnsInPlane,
+                                luggagePercentage,
+                                false,
+                                passengers
+                        );
+                        flights.add(flight);
+
+                    }
+                }
+
+            }else{
+                for (boolean doubleExit: doubleExitOptions){
+                    for (int luggagePercentage : luggagePercentages){
+                        for (int i=0;i<50;i++){
+
+                            String flightNumber = "F"+UUID.randomUUID().toString().substring(0,8).toUpperCase();
+                            List<Passenger> passengers = generatePassengers(
+                                    rows,
+                                    numberOfColumnsInPlane,
+                                    rows * numberOfColumnsInPlane,
+                                    luggagePercentage
+                            );
+
+                            Flight flight = new Flight(
+                                    flightNumber,
+                                    rows,
+                                    numberOfColumnsInPlane,
+                                    rows * numberOfColumnsInPlane,
+                                    luggagePercentage,
+                                    doubleExit,
+                                    passengers
+                            );
+                            flights.add(flight);
+                        }
+                    }
                 }
             }
         }
 
-        System.out.println("Generated " + allPassengers.size() + " passenger lists.");
-
+        saveFlightsDataCSV(flights);
     }
 
 }
