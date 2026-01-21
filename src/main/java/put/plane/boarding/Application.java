@@ -111,16 +111,16 @@ public class Application {
 
             log.info("\tRunning GA");
             OptimizerResult gaResult = geneticAlgorithmOptimizer.run(false, plane, generatedPassengers, path,
-                    50, 20,
+                    50, 30,
                     0.2, 0.8);
 
             log.info("\tRunning SA");
             OptimizerResult saResult = simulatedAnnealingOptimizer.run(false, plane, generatedPassengers, path,
-                    100.0, 0.995, 1000);
+                    100.0, 0.995, 500);
 
             log.info("\tRunning TS");
             OptimizerResult tsResult = tabuSearchOptimizer.run(false, plane, generatedPassengers, path,
-                    500, 15, 20);
+                    500, 10, 20);
 
             List<OptimizerResult> results = List.of(
                     aileMiddleWindowResult,
