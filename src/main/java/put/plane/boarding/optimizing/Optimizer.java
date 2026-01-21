@@ -44,7 +44,7 @@ public abstract class Optimizer {
                         .toList())
                 .collect(Collectors.toCollection(ArrayList::new));
 
-        int time = getTimeForOrder(plane, mappedPassengers, path, methodName, true);
+        int time = getTimeForOrder(plane, mappedPassengers, path, methodName, false);
 
         if (logs) {
             log.info(description);

@@ -77,7 +77,7 @@ public class AdvancedOptimizer extends Optimizer {
     }
 
     protected int evaluateFitness(Plane plane, List<List<Integer>> indexGroups, List<Passenger> generatedPassengers) {
-        log.info("Evaluating individual with {} groups", indexGroups.size());
+//        log.info("Evaluating individual with {} groups", indexGroups.size());
 
         List<List<Integer>> splitGroups = splitSameRowPassengers(indexGroups, generatedPassengers);
 
@@ -90,12 +90,12 @@ public class AdvancedOptimizer extends Optimizer {
         passengerGroups = sortGroupsBySeatOrder(passengerGroups, plane.getColumns());
 
         long startTime = System.currentTimeMillis();
-        log.info("Starting simulation...");
+//        log.info("Starting simulation...");
 
         int time = getTimeForOrder(plane, passengerGroups, null, null, false);
 
         long elapsed = System.currentTimeMillis() - startTime;
-        log.info("Simulation completed: {} ticks in {} ms", time, elapsed);
+//        log.info("Simulation completed: {} ticks in {} ms", time, elapsed);
 
         return time;
     }
@@ -233,7 +233,7 @@ public class AdvancedOptimizer extends Optimizer {
     }
 
     protected List<List<Passenger>> sortGroupsBySeatOrder(List<List<Passenger>> passengerGroups, int planeColumns) {
-        log.info("Sorting {} groups by seat order (plane has {} columns)", passengerGroups.size(), planeColumns);
+//        log.info("Sorting {} groups by seat order (plane has {} columns)", passengerGroups.size(), planeColumns);
 
         List<List<Passenger>> sorted = new ArrayList<>();
 
@@ -281,7 +281,7 @@ public class AdvancedOptimizer extends Optimizer {
             sorted.add(sortedGroup);
         }
 
-        log.info("Sorting completed");
+//        log.info("Sorting completed");
         return sorted;
     }
 

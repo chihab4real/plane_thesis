@@ -43,7 +43,7 @@ public class RowBasedOptimizer extends Optimizer {
                 : "BackToFront (Row by row from back to front)";
 
 
-        return runOptimization(plane, logs, path, type, description, allGroups, generatedPassengers, true);
+        return runOptimization(plane, logs, path, type, description, allGroups, generatedPassengers, false);
     }
 
     public void setFrontToBack(boolean frontToBack) {

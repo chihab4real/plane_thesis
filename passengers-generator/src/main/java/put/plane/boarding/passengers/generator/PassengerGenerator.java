@@ -214,7 +214,7 @@ public class PassengerGenerator {
 
             if (numberOfColumnsInPlane == 4){
                 for (int luggagePercentage : luggagePercentages){
-                    for (int i=0;i<50;i++){
+                    for (int i=0;i<30;i++){
 
                         String flightNumber = "F"+UUID.randomUUID().toString().substring(0,8).toUpperCase();
                         List<Passenger> passengers = generatePassengers(
@@ -241,7 +241,7 @@ public class PassengerGenerator {
             }else{
                 for (boolean doubleExit: doubleExitOptions){
                     for (int luggagePercentage : luggagePercentages){
-                        for (int i=0;i<50;i++){
+                        for (int i=0;i<30;i++){
 
                             String flightNumber = "F"+UUID.randomUUID().toString().substring(0,8).toUpperCase();
                             List<Passenger> passengers = generatePassengers(

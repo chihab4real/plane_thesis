@@ -50,7 +50,7 @@ public class AisleMiddleWindowOptimizer extends Optimizer {
 
         return runOptimization(plane, logs,path, "AisleMiddleWindow",
                 "aisleMiddleWindow Optimization", allGroups, generatedPassengers,
-                true);
+                false);
     }
 
 }

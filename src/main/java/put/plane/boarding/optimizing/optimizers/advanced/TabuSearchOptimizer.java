@@ -159,7 +159,7 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
         }
 
         return runOptimization(plane, logs, path, "TabuSearch",
-                "Tabu Search Optimization", bestSolution, generatedPassengers, true);
+                "Tabu Search Optimization", bestSolution, generatedPassengers, false);
     }
 
 

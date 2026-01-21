@@ -13,6 +13,7 @@ import put.plane.boarding.optimizing.optimizers.advanced.GeneticAlgorithmOptimiz
 import put.plane.boarding.optimizing.optimizers.advanced.SimulatedAnnealingOptimizer;
 import put.plane.boarding.optimizing.optimizers.advanced.TabuSearchOptimizer;
 import put.plane.boarding.optimizing.optimizers.basic.*;
+import put.plane.boarding.passengers.generator.Flight;
 import put.plane.boarding.passengers.generator.Passenger;
 import put.plane.boarding.passengers.generator.PassengerGenerator;
 import put.plane.boarding.simulator.plane.Plane;
@@ -22,6 +23,7 @@ import put.plane.boarding.simulator.simulator.frame.CSVService;
 import put.plane.boarding.simulator.simulator.frame.JSONService;
 import put.plane.boarding.simulator.simulator.frame.XMLService;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -77,101 +79,67 @@ public class Application {
     }
 
     public void run() {
-        // creating example problem
-        Plane plane = planeFactory.create(30, 6, true);
 
-//        for(int i=100;i>=20;i-=5) {
-            log.info("===== SIMULATION FOR {}% OF PASSENGERS WITH LUGGAGE =====", 100);
-            String path = createDirectoryIfNotExists();
-            String flightId = "FLIGHT_" + DateFormatUtils.format(new Date(), "yyyyMMdd_HHmmss");
+        int startFlightIndex = 1;
+        int endFlightIndex = 200;
+        List<Flight> allFlights = readFlightsDataCSV();
 
-            List<Passenger> generatedPassengers = generatePassengers(plane,100);
-            xmlService.saveGeneratedPassengers(generatedPassengers, path);
+        List<Flight> flightsToSimulate = splitFlights(allFlights, startFlightIndex, endFlightIndex);
 
-            Map<String, OptimizerResult> allResults = new LinkedHashMap<>();
+        String path = createDirectoryIfNotExists("flights_" + startFlightIndex + "_to_" + endFlightIndex);
 
-            log.info("Running Basic Optimizers\n");
+        int counter = 1;
+        for (Flight flight : flightsToSimulate) {
+            log.info("FLIGHT: {"+counter+"} - " + flight.getFlightNumber());
+            counter++;
+            Plane plane = planeFactory.create(flight.getPlaneRows(), flight.getPlaneColumns(), flight.isDoubleExit());
+            List<Passenger> generatedPassengers = flight.getPassengers();
 
-            log.info("Running Aisle-Middle-Window Optimizer");
+            log.info("\tRunning AMW");
             OptimizerResult aileMiddleWindowResult = aisleMiddleWindowOptimizer.run(plane, generatedPassengers, path, false);
-            log.info("Result: {}\n\n", aileMiddleWindowResult);
-            csvService.saveOptimizationResultsToCSV(generatedPassengers, aileMiddleWindowResult.passengerGroups(),
-                    path, "AisleMiddleWindow", flightId);
-            allResults.put("AisleMiddleWindow", aileMiddleWindowResult);
-            log.info("==Aisle-Middle-Window optimization completed.==\n");
 
-            log.info("Running FrontToBack Optimizer");
+            log.info("\tRunning FB");
             rowBasedOptimizer.setFrontToBack(true);
             OptimizerResult frontToBackResult = rowBasedOptimizer.run(plane, generatedPassengers, path, false);
-            log.info("Result: {}\n\n", frontToBackResult);
-            csvService.saveOptimizationResultsToCSV(generatedPassengers, frontToBackResult.passengerGroups(),
-                    path, "FrontToBack", flightId);
-            allResults.put("FrontToBack", frontToBackResult);
-            log.info("==FrontToBack optimization completed.==\n");
 
-            log.info("Running BackToFront Optimizer");
+            log.info("\tRunning BF");
             rowBasedOptimizer.setFrontToBack(false);
-            OptimizerResult rowBasedResult = rowBasedOptimizer.run(plane, generatedPassengers, path, false);
-            log.info("Result: {}\n\n", rowBasedResult);
-            csvService.saveOptimizationResultsToCSV(generatedPassengers, rowBasedResult.passengerGroups(),
-                    path, "BackToFront", flightId);
-            allResults.put("BackToFront", rowBasedResult);
-            log.info("==BackToFront optimization completed.==\n");
+            OptimizerResult backToFront = rowBasedOptimizer.run(plane, generatedPassengers, path, false);
 
-            log.info("Running Zig Zag Optimizer");
+            log.info("\tRunning ZZ");
             OptimizerResult zigZagResult = zigZagOptimizer.run(plane, generatedPassengers, path, false);
-            log.info("Result: {}\n\n", zigZagResult);
-            csvService.saveOptimizationResultsToCSV(generatedPassengers, zigZagResult.passengerGroups(),
-                    path, "Zigzag", flightId);
-            allResults.put("Zigzag", zigZagResult);
-            log.info("==Zig Zag optimization completed.==\n");
 
-
-            log.info("Running Advanced Optimizers\n");
-//
-            log.info("Genetic Algorithm Optimization\n");
-            OptimizerResult gaResult = geneticAlgorithmOptimizer.run(false, plane, generatedPassengers, path, 50, 30,
+            log.info("\tRunning GA");
+            OptimizerResult gaResult = geneticAlgorithmOptimizer.run(false, plane, generatedPassengers, path,
+                    50, 20,
                     0.2, 0.8);
-            log.info("Best time from GA: {}\n\n", gaResult);
-            csvService.saveOptimizationResultsToCSV(generatedPassengers, gaResult.passengerGroups(),
-                    path, "GeneticAlgorithm", flightId);
-            allResults.put("GeneticAlgorithm", gaResult);
-            log.info("==Genetic Algorithm optimization completed.==\n");
 
-            log.info("Simulated Annealing Optimization\n");
-            OptimizerResult saResult = simulatedAnnealingOptimizer.run(false, plane, generatedPassengers, path, 100.0, 0.995, 500);
-            log.info("Best time from SA: {}\n\n", saResult);
-            csvService.saveOptimizationResultsToCSV(generatedPassengers, saResult.passengerGroups(),
-                    path, "SimulatedAnnealing", flightId);
-            allResults.put("SimulatedAnnealing", saResult);
-            log.info("==Simulated Annealing optimization completed.==\n");
+            log.info("\tRunning SA");
+            OptimizerResult saResult = simulatedAnnealingOptimizer.run(false, plane, generatedPassengers, path,
+                    100.0, 0.995, 1000);
 
-            log.info("Tabu Search Optimization\n");
-            OptimizerResult tsResult = tabuSearchOptimizer.run(false, plane, generatedPassengers, path, 500, 10, 10);
-            log.info("Best time from TS: {}\n\n", tsResult);
-            csvService.saveOptimizationResultsToCSV(generatedPassengers, tsResult.passengerGroups(),
-                    path, "TabuSearch", flightId);
-            allResults.put("TabuSearch", tsResult);
-            log.info("==Tabu Search optimization completed.==\n");
+            log.info("\tRunning TS");
+            OptimizerResult tsResult = tabuSearchOptimizer.run(false, plane, generatedPassengers, path,
+                    500, 15, 20);
 
-            csvService.saveOptimizationSummary(List.of(
+            List<OptimizerResult> results = List.of(
                     aileMiddleWindowResult,
-                    rowBasedResult,
+                    frontToBackResult,
+                    backToFront,
                     zigZagResult,
                     gaResult,
                     saResult,
                     tsResult
-            ), path, "optimization_summary", flightId);
+            );
 
-            log.info("\nSaving comprehensive JSON file with all optimization results...");
-            jsonService.saveOptimizationResultsToJSON(allResults, generatedPassengers, path, "optimization_results", flightId);
-            log.info("All results saved successfully!");
-//        }
+            csvService.appendOptimizationResultsToCSV(generatedPassengers,results, path, "optimization_summary.csv", flight.getFlightNumber());
+            csvService.appendOptimizationSummary(results, path, "overall_summary.csv", flight.getFlightNumber());
+        }
+
     }
 
-    private String createDirectoryIfNotExists() {
-        String currentDateString = DateFormatUtils.format(new Date(), "yyyy-MM-dd HH.mm.ss");
-        Path path = Paths.get("simulation_results", currentDateString);
+    private String createDirectoryIfNotExists(String name) {
+        Path path = Paths.get("simulation_results", name);
 
         try {
             if (Files.notExists(path)) {
@@ -194,6 +162,81 @@ public class Application {
                 plane.getRows() * plane.getColumns(),
                 passengersLuggagePercentage
         );
+    }
+
+    public static List<Flight> readFlightsDataCSV() {
+        Path inputPath = Paths.get("generated_flights/", "generated_passengers.csv");
+        // LinkedHashMap keeps the flights in the order they appear in the file
+        Map<String, Flight> flightMap = new LinkedHashMap<>();
+
+        try (BufferedReader reader = Files.newBufferedReader(inputPath)) {
+            String header = reader.readLine();
+            if (header == null) return new ArrayList<>();
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                // The "-1" limit is CRITICAL: it prevents Java from skipping empty trailing columns
+                String[] columns = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)") ;
+
+                // 1. Parse Flight Data
+                String flightNumber = columns[0];
+                int rows = Integer.parseInt(columns[1]);
+                int cols = Integer.parseInt(columns[2]);
+                int totalPassengers = Integer.parseInt(columns[3]);
+                int luggagePerc = Integer.parseInt(columns[4]);
+                boolean doubleExit = Boolean.parseBoolean(columns[5]);
+
+                // 2. Parse Passenger Data
+                String pId = columns[6];
+                String seat = unescapeCSV(columns[7]);
+                Integer speedQ = Integer.parseInt(columns[8]);
+                Integer speedE = Integer.parseInt(columns[9]);
+                boolean hasLuggage = Boolean.parseBoolean(columns[10]);
+
+                // Handle empty Luggage Location
+                String luggageLoc = (columns.length > 11 && !columns[11].isEmpty()) ? unescapeCSV(columns[11]) : null;
+
+                // Handle empty Luggage Pickup Time
+                Integer luggageTime = null;
+                if (columns.length > 12 && !columns[12].trim().isEmpty()) {
+                    luggageTime = Integer.parseInt(columns[12].trim());
+                }
+
+                Passenger passenger = new Passenger(pId, seat, speedQ, speedE, hasLuggage, luggageLoc, luggageTime);
+
+                // 3. Grouping Logic
+                flightMap.computeIfAbsent(flightNumber, k -> new Flight(
+                        flightNumber, rows, cols, totalPassengers, luggagePerc, doubleExit, new ArrayList<>()
+                )).getPassengers().add(passenger);
+            }
+        } catch (Exception e) {
+            System.err.println("Critical error reading CSV: " + e.getMessage());
+        }
+
+        return new ArrayList<>(flightMap.values());
+    }
+
+    private static String unescapeCSV(String value) {
+        if (value == null || value.isEmpty()) return "";
+        if (value.startsWith("\"") && value.endsWith("\"")) {
+            value = value.substring(1, value.length() - 1);
+            return value.replace("\"\"", "\"");
+        }
+        return value;
+    }
+
+    public void runOptimizationForFlights(List<Flight> flights) {
+        for (Flight flight : flights) {
+
+        }
+    }
+
+    public List<Flight> splitFlights(List<Flight> flights, int startIndex, int endIndex) {
+        List<Flight> splitFlights = new ArrayList<>();
+        for (int i = startIndex-1; i <= endIndex-1 && i < flights.size(); i++) {
+            splitFlights.add(flights.get(i));
+        }
+        return splitFlights;
     }
 
 }

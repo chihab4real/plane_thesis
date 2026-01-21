@@ -118,7 +118,7 @@ public class SimulatedAnnealingOptimizer extends AdvancedOptimizer {
 
         // Save visualization for best solution
         return runOptimization(plane, logs, path, "SimulatedAnnealing",
-                "Simulated Annealing Optimization", bestSolution, generatedPassengers, true);
+                "Simulated Annealing Optimization", bestSolution, generatedPassengers, false);
     }
 
 }

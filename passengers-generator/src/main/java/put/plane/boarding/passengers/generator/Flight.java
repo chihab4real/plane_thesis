@@ -2,11 +2,13 @@ package put.plane.boarding.passengers.generator;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.ToString;
 
 import java.util.List;
 
 @Getter
 @AllArgsConstructor
+@ToString
 public class Flight {
     // Getters
     private final String flightNumber;

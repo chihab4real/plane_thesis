@@ -10,22 +10,30 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Random;
+import java.nio.file.StandardOpenOption;
+import java.util.*;
 
 @Slf4j
 @Service
 public class CSVService {
 
-    public void saveOptimizationSummary(List<OptimizerResult> results, String path, String fileName, String flightId){
-        Path outputPath = Paths.get(path, fileName + ".csv");
+    public void appendOptimizationSummary(List<OptimizerResult> results, String path, String fileName, String flightId) {
+        Path outputPath = Paths.get(path, fileName);
 
         try {
             Files.createDirectories(outputPath.getParent());
 
-            try (BufferedWriter writer = Files.newBufferedWriter(outputPath)) {
-                writer.write("flightID,methodName,totalDeplaningTime,numberOfGroups");
-                writer.newLine();
+
+            boolean fileExists = Files.exists(outputPath);
+
+            try (BufferedWriter writer = Files.newBufferedWriter(outputPath,
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.APPEND)) {
+
+                if (!fileExists) {
+                    writer.write("flightID,methodName,totalDeplaningTime,numberOfGroups");
+                    writer.newLine();
+                }
 
                 for (OptimizerResult result : results) {
                     String line = String.format("%s,%s,%d,%d",
@@ -41,32 +49,59 @@ public class CSVService {
             }
 
         } catch (IOException e) {
-            log.error("Failed to save CSV file: {}", outputPath, e);
-            throw new RuntimeException("Could not save CSV file", e);
+            log.error("Failed to append to CSV file: {}", outputPath, e);
+            throw new RuntimeException("Could not append to CSV file", e);
         }
     }
-    public void saveOptimizationResultsToCSV(List<Passenger> passengers,
-                                             List<List<Integer>> passengerGroups,
-                                             String path,
-                                             String fileName,
-                                             String flightId) {
-        Path outputPath = Paths.get(path,"optimization_results", fileName + ".csv");
-        Random random = new Random();
+
+    public void appendOptimizationResultsToCSV(List<Passenger> passengers,
+                                               List<OptimizerResult> optimizerResults,
+                                               String path,
+                                               String fileName,
+                                               String flightId) {
+        Path outputPath = Paths.get(path, fileName);
+
+        // 1. Build the dynamic header
+        StringBuilder methodsHeader = new StringBuilder();
+        for (int i = 0; i < optimizerResults.size(); i++) {
+            if (i > 0) methodsHeader.append(",");
+            methodsHeader.append(optimizerResults.get(i).methodName()).append("Group");
+        }
+
+        // 2. Pre-process results: Create a Map for each method: <PassengerIndex, GroupNumber>
+        List<Map<Integer, Integer>> groupLookups = new ArrayList<>();
+        for (OptimizerResult result : optimizerResults) {
+            Map<Integer, Integer> lookup = new HashMap<>();
+            List<List<Integer>> groups = result.passengerGroups();
+            for (int g = 0; g < groups.size(); g++) {
+                for (Integer pIdx : groups.get(g)) {
+                    lookup.put(pIdx, g + 1); // Group numbers usually start at 1
+                }
+            }
+            groupLookups.add(lookup);
+        }
 
         try {
             Files.createDirectories(outputPath.getParent());
+            boolean fileExists = Files.exists(outputPath);
 
-            try (BufferedWriter writer = Files.newBufferedWriter(outputPath)) {
-                writer.write("flightID,passengerID,seatLocation,speedQueue,speedExiting,hasLuggage,luggageLocation," +
-                        "luggagePickupTime,deplaningGroupNumber,totalDeplaningTime,timeSpentInQueue");
-                writer.newLine();
+            try (BufferedWriter writer = Files.newBufferedWriter(outputPath,
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.APPEND)) {
 
-                int groupNumber = 1;
-                for (List<Integer> group : passengerGroups) {
-                    for (Integer passengerIndex : group) {
-                        Passenger passenger = passengers.get(passengerIndex);
+                // Write Header
+                if (!fileExists) {
+                    writer.write("flightID,passengerID,seatLocation,speedQueue,speedExiting,hasLuggage," +
+                            "luggageLocation,luggagePickupTime," + methodsHeader);
+                    writer.newLine();
+                }
 
-                        String line = String.format("%s,%s,%s,%d,%d,%s,%s,%s,%d,%d,%d",
+                // 3. Iterate through all passengers once
+                for (int i = 0; i < passengers.size(); i++) {
+                    Passenger passenger = passengers.get(i);
+
+                    // Build the static part of the row
+                    StringBuilder line = new StringBuilder(String.format("%s,%s,%s,%d,%d,%b,%s,%s",
                             flightId,
                             escapeCSV(passenger.getId()),
                             escapeCSV(passenger.getSeatLocation()),
@@ -74,24 +109,25 @@ public class CSVService {
                             passenger.getSpeedExiting(),
                             passenger.isHasLuggage(),
                             passenger.getLuggageLocation() != null ? escapeCSV(passenger.getLuggageLocation()) : "",
-                            passenger.getLuggagePickUpTime() != null ? passenger.getLuggagePickUpTime().toString() : "",
-                            groupNumber,
-                            random.nextInt(10, 200),
-                            random.nextInt(1, 100)
-                        );
+                            passenger.getLuggagePickUpTime() != null ? passenger.getLuggagePickUpTime().toString() : ""
+                    ));
 
-                        writer.write(line);
-                        writer.newLine();
+                    // 4. Append the group number for each specific optimization method
+                    for (Map<Integer, Integer> lookup : groupLookups) {
+                        Integer gNum = lookup.getOrDefault(i, 0); // 0 if passenger wasn't in a group
+                        line.append(",").append(gNum);
                     }
-                    groupNumber++;
+
+                    writer.write(line.toString());
+                    writer.newLine();
                 }
             }
 
-            log.info("CSV file saved successfully at: {}", outputPath.toAbsolutePath());
+            log.info("CSV results appended successfully at: {}", outputPath.toAbsolutePath());
 
         } catch (IOException e) {
-            log.error("Failed to save CSV file: {}", outputPath, e);
-            throw new RuntimeException("Could not save CSV file", e);
+            log.error("Failed to append to CSV file: {}", outputPath, e);
+            throw new RuntimeException("Could not append to CSV file", e);
         }
     }
 
@@ -107,39 +143,6 @@ public class CSVService {
         return value;
     }
 
-    public void savePassengersToCsv(List<Passenger> passengers, String path) {
-        Path outputPath = Paths.get(path, "generated_passengers.csv");
 
-        try {
-            Files.createDirectories(outputPath.getParent());
-
-            try (BufferedWriter writer = Files.newBufferedWriter(outputPath)) {
-                writer.write("passengerID,seatLocation,speedQueue,speedExiting,hasLuggage,luggageLocation,luggagePickupTime");
-                writer.newLine();
-
-                for (Passenger p : passengers) {
-                    String line = String.format("%s,%s,%d,%d,%s,%s,%s",
-                            escapeCSV(p.getId()),
-                            escapeCSV(p.getSeatLocation()),
-                            p.getSpeedQueue(),
-                            p.getSpeedExiting(),
-                            p.isHasLuggage(),
-                            p.getLuggageLocation() != null ? escapeCSV(p.getLuggageLocation()) : "",
-                            p.getLuggagePickUpTime() != null ? p.getLuggagePickUpTime().toString() : ""
-                    );
-
-                    writer.write(line);
-                    writer.newLine();
-                }
-            }
-
-            log.info("Generated passengers CSV file saved successfully at: {}", outputPath.toAbsolutePath());
-
-        } catch (IOException e) {
-            log.error("Failed to save generated passengers CSV file: {}", outputPath, e);
-            throw new RuntimeException("Could not save generated passengers CSV file", e);
-        }
-
-    }
 
 }

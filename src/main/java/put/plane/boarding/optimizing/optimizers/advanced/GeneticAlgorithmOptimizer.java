@@ -113,7 +113,7 @@ public class GeneticAlgorithmOptimizer extends AdvancedOptimizer {
 
         // SAVE VISUALIZATION for the best solution only
         return runOptimization(plane, logs, path,"GeneticAlgorithm",
-                "Genetic Algorithm Optimization", bestSolution, generatedPassengers, true);
+                "Genetic Algorithm Optimization", bestSolution, generatedPassengers, false);
     }
 
 
