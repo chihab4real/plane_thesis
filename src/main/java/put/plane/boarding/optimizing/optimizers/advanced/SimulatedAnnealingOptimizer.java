@@ -46,7 +46,10 @@ public class SimulatedAnnealingOptimizer extends AdvancedOptimizer {
             log.info("Initial solution: {} ticks, {} groups", currentEnergy, currentSolution.size());
         }
 
-        while (iteration < maxIterations && temperature > 0.01) {
+        long startTime = System.currentTimeMillis();
+        long MAX_TIME_MS = 150_000;
+
+        while (iteration < maxIterations && temperature > 0.01 && !shouldStop(startTime, MAX_TIME_MS, iteration, maxIterations)) {
             // Generate neighbor solution
 
             List<List<Integer>> neighbor = generateNeighbor(currentSolution, random);

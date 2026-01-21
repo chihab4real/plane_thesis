@@ -49,7 +49,11 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
             log.info("Initial solution: {} ticks, {} groups", currentEnergy, currentSolution.size());
         }
 
-        while (iteration < maxIterations) {
+        long startTime = System.currentTimeMillis();
+        long MAX_TIME_MS = 150_000;
+
+
+        while (iteration < maxIterations && !shouldStop(startTime, MAX_TIME_MS, iteration, maxIterations)) {
             // Generate neighborhood
             List<NeighborSolution> neighbors = new ArrayList<>();
 
@@ -160,16 +164,19 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
 
 
     @Override
-    public OptimizerResult runOptimization(Plane plane, boolean logs,String path, String methodName, String description,
+    public OptimizerResult runOptimization(Plane plane, boolean logs, String path, String methodName, String description,
                                             List<List<Integer>> allGroups, List<Passenger> generatedPassengers,
                                             boolean saveVisualization) {
         List<List<Passenger>> mappedPassengers = allGroups
-                .stream()
-                .map(passengers -> passengers
-                        .stream()
-                        .map(generatedPassengers::get)
-                        .toList())
-                .collect(Collectors.toCollection(ArrayList::new));
+            .stream()
+            .map(passengers -> passengers
+                    .stream()
+                    .map(generatedPassengers::get)
+                    .toList())
+            .collect(Collectors.toCollection(ArrayList::new));
+
+        mappedPassengers = sortGroupsBySeatOrder(mappedPassengers, plane.getColumns());
+
 
         if ("Zigzag".equals(methodName)) {
             Collections.reverse(mappedPassengers);
@@ -185,10 +192,9 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
             }
         }
 
-        // Flatten groups into a single list of passenger IDs
         List<Integer> flattenedSolution = allGroups.stream()
-                .flatMap(List::stream)
-                .collect(Collectors.toList());
+            .flatMap(List::stream)
+            .collect(Collectors.toList());
 
         return new OptimizerResult(methodName, time, flattenedSolution, allGroups);
     }

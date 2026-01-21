@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -38,7 +39,10 @@ public class GeneticAlgorithmOptimizer extends AdvancedOptimizer {
         int bestTime = Integer.MAX_VALUE;
         List<List<Integer>> bestSolution = null;
 
-        for (int gen = 0; gen < generations; gen++) {
+        long startTime = System.currentTimeMillis();
+        long MAX_TIME_MS = 150_000;
+
+        for (int gen = 0; gen < generations  && !shouldStop(startTime, MAX_TIME_MS, gen, generations); gen++) {
             long genStart = System.currentTimeMillis();
             //log.info("Starting generation {}/{}", gen, generations);
 
@@ -95,7 +99,6 @@ public class GeneticAlgorithmOptimizer extends AdvancedOptimizer {
                 log.info("Gen {}/{} - Best so far: {}", gen, generations, bestTime);
             }
             long genTime = System.currentTimeMillis() - genStart;
-//            log.info("Generation {} completed in {} seconds", gen, genTime / 1000.0);
         }
 
         if (bestSolution == null) {
@@ -220,6 +223,9 @@ public class GeneticAlgorithmOptimizer extends AdvancedOptimizer {
             Collections.reverse(individual.subList(start, end + 1));
         }
     }
+
+
+
 
 
 }

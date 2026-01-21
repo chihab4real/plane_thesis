@@ -78,14 +78,14 @@ public class Application {
 
     public void run() {
         // creating example problem
-        Plane plane = planeFactory.create(20, 6);
+        Plane plane = planeFactory.create(30, 6, true);
 
-        for(int i=100;i>=20;i-=5) {
-            log.info("===== SIMULATION FOR {}% OF PASSENGERS WITH LUGGAGE =====", i);
+//        for(int i=100;i>=20;i-=5) {
+            log.info("===== SIMULATION FOR {}% OF PASSENGERS WITH LUGGAGE =====", 100);
             String path = createDirectoryIfNotExists();
             String flightId = "FLIGHT_" + DateFormatUtils.format(new Date(), "yyyyMMdd_HHmmss");
 
-            List<Passenger> generatedPassengers = generatePassengers(plane,i);
+            List<Passenger> generatedPassengers = generatePassengers(plane,100);
             xmlService.saveGeneratedPassengers(generatedPassengers, path);
 
             Map<String, OptimizerResult> allResults = new LinkedHashMap<>();
@@ -128,9 +128,9 @@ public class Application {
 
 
             log.info("Running Advanced Optimizers\n");
-
+//
             log.info("Genetic Algorithm Optimization\n");
-            OptimizerResult gaResult = geneticAlgorithmOptimizer.run(false, plane, generatedPassengers, path, 50, 20,
+            OptimizerResult gaResult = geneticAlgorithmOptimizer.run(false, plane, generatedPassengers, path, 50, 30,
                     0.2, 0.8);
             log.info("Best time from GA: {}\n\n", gaResult);
             csvService.saveOptimizationResultsToCSV(generatedPassengers, gaResult.passengerGroups(),
@@ -139,7 +139,7 @@ public class Application {
             log.info("==Genetic Algorithm optimization completed.==\n");
 
             log.info("Simulated Annealing Optimization\n");
-            OptimizerResult saResult = simulatedAnnealingOptimizer.run(false, plane, generatedPassengers, path, 100.0, 0.995, 1000);
+            OptimizerResult saResult = simulatedAnnealingOptimizer.run(false, plane, generatedPassengers, path, 100.0, 0.995, 500);
             log.info("Best time from SA: {}\n\n", saResult);
             csvService.saveOptimizationResultsToCSV(generatedPassengers, saResult.passengerGroups(),
                     path, "SimulatedAnnealing", flightId);
@@ -147,7 +147,7 @@ public class Application {
             log.info("==Simulated Annealing optimization completed.==\n");
 
             log.info("Tabu Search Optimization\n");
-            OptimizerResult tsResult = tabuSearchOptimizer.run(false, plane, generatedPassengers, path, 500, 15, 20);
+            OptimizerResult tsResult = tabuSearchOptimizer.run(false, plane, generatedPassengers, path, 500, 10, 10);
             log.info("Best time from TS: {}\n\n", tsResult);
             csvService.saveOptimizationResultsToCSV(generatedPassengers, tsResult.passengerGroups(),
                     path, "TabuSearch", flightId);
@@ -166,7 +166,7 @@ public class Application {
             log.info("\nSaving comprehensive JSON file with all optimization results...");
             jsonService.saveOptimizationResultsToJSON(allResults, generatedPassengers, path, "optimization_results", flightId);
             log.info("All results saved successfully!");
-        }
+//        }
     }
 
     private String createDirectoryIfNotExists() {
