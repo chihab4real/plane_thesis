@@ -65,20 +65,31 @@ public class CSVService {
         StringBuilder methodsHeader = new StringBuilder();
         for (int i = 0; i < optimizerResults.size(); i++) {
             if (i > 0) methodsHeader.append(",");
-            methodsHeader.append(optimizerResults.get(i).methodName()).append("Group");
+            String name = optimizerResults.get(i).methodName();
+            methodsHeader.append(name).append("Group")
+                    .append(",")
+                    .append(name).append("OrderInGroup")
+                    .append(",")
+                    .append(name).append("WaitCount");
         }
 
         // 2. Pre-process results: Create a Map for each method: <PassengerIndex, GroupNumber>
         List<Map<Integer, Integer>> groupLookups = new ArrayList<>();
+        List<Map<Integer, Integer>> orderInGroupLookups = new ArrayList<>();
         for (OptimizerResult result : optimizerResults) {
             Map<Integer, Integer> lookup = new HashMap<>();
+            Map<Integer, Integer> orderLookup = new HashMap<>();
             List<List<Integer>> groups = result.passengerGroups();
             for (int g = 0; g < groups.size(); g++) {
-                for (Integer pIdx : groups.get(g)) {
+                List<Integer> group = groups.get(g);
+                for (int order = 0; order < group.size(); order++) {
+                    Integer pIdx = group.get(order);
                     lookup.put(pIdx, g + 1); // Group numbers usually start at 1
+                    orderLookup.put(pIdx, order + 1); // Order in group starts at 1
                 }
             }
             groupLookups.add(lookup);
+            orderInGroupLookups.add(orderLookup);
         }
 
         try {
@@ -112,10 +123,19 @@ public class CSVService {
                             passenger.getLuggagePickUpTime() != null ? passenger.getLuggagePickUpTime().toString() : ""
                     ));
 
-                    // 4. Append the group number for each specific optimization method
-                    for (Map<Integer, Integer> lookup : groupLookups) {
-                        Integer gNum = lookup.getOrDefault(i, 0); // 0 if passenger wasn't in a group
-                        line.append(",").append(gNum);
+                    // 4. Append the group number, order in group, and wait count for each optimization method
+                    for (int j = 0; j < optimizerResults.size(); j++) {
+                        Map<Integer, Integer> groupLookup = groupLookups.get(j);
+                        Map<Integer, Integer> orderLookup = orderInGroupLookups.get(j);
+                        OptimizerResult result = optimizerResults.get(j);
+
+                        Integer gNum = groupLookup.getOrDefault(i, 0); // 0 if passenger wasn't in a group
+                        Integer orderInGroup = orderLookup.getOrDefault(i, 0);
+                        Long waitCount = result.waitCountPerPassenger().getOrDefault(i, 0L);
+
+                        line.append(",").append(gNum)
+                            .append(",").append(orderInGroup)
+                            .append(",").append(waitCount);
                     }
 
                     writer.write(line.toString());

@@ -32,7 +32,7 @@ public class GeneticAlgorithmOptimizer extends AdvancedOptimizer {
         for (List<List<Integer>> individual : population) {
             if (!isValidIndividual(individual, totalPassengers)) {
 //                log.error("Invalid individual in initial population!");
-                return new OptimizerResult("", Integer.MAX_VALUE, new ArrayList<>(), new ArrayList<>());
+                return new OptimizerResult("", Integer.MAX_VALUE, new ArrayList<>(), new ArrayList<>(), new java.util.HashMap<>());
             }
         }
 
@@ -103,7 +103,7 @@ public class GeneticAlgorithmOptimizer extends AdvancedOptimizer {
 
         if (bestSolution == null) {
 //            log.error("No solution found!");
-            return new OptimizerResult("", Integer.MAX_VALUE, new ArrayList<>(), new ArrayList<>());
+            return new OptimizerResult("", Integer.MAX_VALUE, new ArrayList<>(), new ArrayList<>(), new java.util.HashMap<>());
         }
 
         if (logs) {

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import put.plane.boarding.passengers.generator.Passenger;
 import put.plane.boarding.simulator.plane.Plane;
 import put.plane.boarding.simulator.plane.factory.PlaneFactory;
+import put.plane.boarding.simulator.plane.structure.Seat;
 import put.plane.boarding.simulator.problem.DeplainingProblem;
 import put.plane.boarding.simulator.problem.PassengerGroup;
 import put.plane.boarding.simulator.problem.factory.passenger.PassengerFactory;
@@ -17,7 +18,9 @@ import put.plane.boarding.simulator.simulator.SimulatorResponse;
 import put.plane.boarding.simulator.simulator.frame.XMLService;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -44,7 +47,22 @@ public abstract class Optimizer {
                         .toList())
                 .collect(Collectors.toCollection(ArrayList::new));
 
-        int time = getTimeForOrder(plane, mappedPassengers, path, methodName, false);
+        SimulatorResponse simulatorResponse = getTimeForOrder(plane, mappedPassengers, path, methodName, false);
+
+        // Map wait count from Seat to passenger index
+        Map<Integer, Long> waitCountPerPassenger = new HashMap<>();
+        for (int i = 0; i < generatedPassengers.size(); i++) {
+            Passenger p = generatedPassengers.get(i);
+            String seatLocation = p.getSeatLocation();
+            String[] parts = seatLocation.split("_");
+            int row = Integer.parseInt(parts[0]) - 1;
+            int fileIndex = Integer.parseInt(parts[1]) - 1;
+            Seat seat = new Seat(row, plane.getFiles().get(fileIndex));
+            Long waitTime = simulatorResponse.waitCount().get(seat);
+            if (waitTime != null) {
+                waitCountPerPassenger.put(i, waitTime);
+            }
+        }
 
         if (logs) {
             log.info(description);
@@ -55,10 +73,10 @@ public abstract class Optimizer {
             }
         }
 
-        return new OptimizerResult(methodName, time, new ArrayList<>(), allGroups);
+        return new OptimizerResult(methodName, simulatorResponse.time(), new ArrayList<>(), allGroups, waitCountPerPassenger);
     }
 
-    public int getTimeForOrder(Plane plane, List<List<Passenger>> passengers, String path, String methodName, boolean saveVisualization) {
+    public SimulatorResponse getTimeForOrder(Plane plane, List<List<Passenger>> passengers, String path, String methodName, boolean saveVisualization) {
         Plane freshPlane = planeFactory.create(plane.getRows(), plane.getColumns(), plane.getQueue().isDoubleExit());
 
         List<PassengerGroup> currPassengers = PassengerFactory.createSimulatorPassengers(freshPlane, passengers);
@@ -77,7 +95,7 @@ public abstract class Optimizer {
             xmlservice.saveVisualization(response.visualizationDto(), path, methodName);
         }
 
-        return response.time();
+        return response;
     }
 
     public abstract OptimizerResult run(Plane plane,List<Passenger> generatedPassengers, String path, boolean logs);

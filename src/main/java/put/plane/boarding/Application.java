@@ -81,7 +81,7 @@ public class Application {
     public void run() {
 
         int startFlightIndex = 1;
-        int endFlightIndex = 200;
+        int endFlightIndex = 3;
         List<Flight> allFlights = readFlightsDataCSV();
 
         List<Flight> flightsToSimulate = splitFlights(allFlights, startFlightIndex, endFlightIndex);

@@ -6,13 +6,17 @@ import put.plane.boarding.optimizing.AdvancedOptimizer;
 import put.plane.boarding.optimizing.OptimizerResult;
 import put.plane.boarding.passengers.generator.Passenger;
 import put.plane.boarding.simulator.plane.Plane;
+import put.plane.boarding.simulator.plane.structure.Seat;
 import put.plane.boarding.simulator.plane.factory.PlaneFactory;
 import put.plane.boarding.simulator.simulator.Simulator;
+import put.plane.boarding.simulator.simulator.SimulatorResponse;
 import put.plane.boarding.simulator.simulator.frame.XMLService;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -182,7 +186,23 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
             Collections.reverse(mappedPassengers);
         }
 
-        int time = getTimeForOrder(plane, mappedPassengers, path, methodName, saveVisualization);
+        SimulatorResponse simulatorResponse = getTimeForOrder(plane, mappedPassengers, path, methodName, saveVisualization);
+        int time = simulatorResponse.time();
+
+        // Map wait count from Seat to passenger index
+        Map<Integer, Long> waitCountPerPassenger = new HashMap<>();
+        for (int i = 0; i < generatedPassengers.size(); i++) {
+            Passenger p = generatedPassengers.get(i);
+            String seatLocation = p.getSeatLocation();
+            String[] parts = seatLocation.split("_");
+            int row = Integer.parseInt(parts[0]) - 1;
+            int fileIndex = Integer.parseInt(parts[1]) - 1;
+            Seat seat = new Seat(row, plane.getFiles().get(fileIndex));
+            Long waitTime = simulatorResponse.waitCount().get(seat);
+            if (waitTime != null) {
+                waitCountPerPassenger.put(i, waitTime);
+            }
+        }
 
         if (logs) {
             log.info(description);
@@ -196,7 +216,7 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
             .flatMap(List::stream)
             .collect(Collectors.toList());
 
-        return new OptimizerResult(methodName, time, flattenedSolution, allGroups);
+        return new OptimizerResult(methodName, time, flattenedSolution, allGroups, waitCountPerPassenger);
     }
 
 

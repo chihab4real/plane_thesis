@@ -3,6 +3,7 @@ package put.plane.boarding.optimizing;
 import lombok.extern.slf4j.Slf4j;
 import put.plane.boarding.passengers.generator.Passenger;
 import put.plane.boarding.simulator.plane.Plane;
+import put.plane.boarding.simulator.plane.structure.Seat;
 import put.plane.boarding.simulator.plane.factory.PlaneFactory;
 import put.plane.boarding.simulator.problem.DeplainingProblem;
 import put.plane.boarding.simulator.problem.PassengerGroup;
@@ -33,7 +34,23 @@ public class AdvancedOptimizer extends Optimizer {
 
         mappedPassengers = sortGroupsBySeatOrder(mappedPassengers, plane.getColumns());
 
-        int time = getTimeForOrder(plane, mappedPassengers, path, methodName, saveVisualization);
+        SimulatorResponse simulatorResponse = getTimeForOrder(plane, mappedPassengers, path, methodName, saveVisualization);
+        int time = simulatorResponse.time();
+
+        // Map wait count from Seat to passenger index
+        Map<Integer, Long> waitCountPerPassenger = new HashMap<>();
+        for (int i = 0; i < generatedPassengers.size(); i++) {
+            Passenger p = generatedPassengers.get(i);
+            String seatLocation = p.getSeatLocation();
+            String[] parts = seatLocation.split("_");
+            int row = Integer.parseInt(parts[0]) - 1;
+            int fileIndex = Integer.parseInt(parts[1]) - 1;
+            Seat seat = new Seat(row, plane.getFiles().get(fileIndex));
+            Long waitTime = simulatorResponse.waitCount().get(seat);
+            if (waitTime != null) {
+                waitCountPerPassenger.put(i, waitTime);
+            }
+        }
 
         if (logs) {
             log.info(description);
@@ -47,7 +64,7 @@ public class AdvancedOptimizer extends Optimizer {
             .flatMap(List::stream)
             .collect(Collectors.toList());
 
-        return new OptimizerResult(methodName, time, flattenedSolution, allGroups);
+        return new OptimizerResult(methodName, time, flattenedSolution, allGroups, waitCountPerPassenger);
     }
 
     @Override
@@ -92,7 +109,7 @@ public class AdvancedOptimizer extends Optimizer {
         long startTime = System.currentTimeMillis();
 //        log.info("Starting simulation...");
 
-        int time = getTimeForOrder(plane, passengerGroups, null, null, false);
+        int time = getTimeForOrder(plane, passengerGroups, null, null, false).time();
 
         long elapsed = System.currentTimeMillis() - startTime;
 //        log.info("Simulation completed: {} ticks in {} ms", time, elapsed);
