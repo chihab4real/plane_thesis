@@ -81,7 +81,7 @@ public class Application {
     public void run() {
 
         int startFlightIndex = 1;
-        int endFlightIndex = 3;
+        int endFlightIndex = 5;
         List<Flight> allFlights = readFlightsDataCSV();
 
         List<Flight> flightsToSimulate = splitFlights(allFlights, startFlightIndex, endFlightIndex);
@@ -89,6 +89,7 @@ public class Application {
         String path = createDirectoryIfNotExists("flights_" + startFlightIndex + "_to_" + endFlightIndex);
 
         int counter = 1;
+        long startTime = 0;
         for (Flight flight : flightsToSimulate) {
             log.info("FLIGHT: {"+counter+"} - " + flight.getFlightNumber());
             counter++;
@@ -96,31 +97,45 @@ public class Application {
             List<Passenger> generatedPassengers = flight.getPassengers();
 
             log.info("\tRunning AMW");
+            startTime = System.currentTimeMillis();
             OptimizerResult aileMiddleWindowResult = aisleMiddleWindowOptimizer.run(plane, generatedPassengers, path, false);
+            aileMiddleWindowResult.setOptimizationDurationMillis(System.currentTimeMillis() - startTime);
 
             log.info("\tRunning FB");
             rowBasedOptimizer.setFrontToBack(true);
+            startTime = System.currentTimeMillis();
             OptimizerResult frontToBackResult = rowBasedOptimizer.run(plane, generatedPassengers, path, false);
+            frontToBackResult.setOptimizationDurationMillis(System.currentTimeMillis() - startTime);
 
             log.info("\tRunning BF");
             rowBasedOptimizer.setFrontToBack(false);
+            startTime = System.currentTimeMillis();
             OptimizerResult backToFront = rowBasedOptimizer.run(plane, generatedPassengers, path, false);
+            backToFront.setOptimizationDurationMillis(System.currentTimeMillis() - startTime);
 
             log.info("\tRunning ZZ");
+            startTime = System.currentTimeMillis();
             OptimizerResult zigZagResult = zigZagOptimizer.run(plane, generatedPassengers, path, false);
+            zigZagResult.setOptimizationDurationMillis(System.currentTimeMillis() - startTime);
 
             log.info("\tRunning GA");
+            startTime = System.currentTimeMillis();
             OptimizerResult gaResult = geneticAlgorithmOptimizer.run(false, plane, generatedPassengers, path,
                     50, 30,
                     0.2, 0.8);
+            gaResult.setOptimizationDurationMillis(System.currentTimeMillis() - startTime);
 
             log.info("\tRunning SA");
+            startTime = System.currentTimeMillis();
             OptimizerResult saResult = simulatedAnnealingOptimizer.run(false, plane, generatedPassengers, path,
                     100.0, 0.995, 500);
+            saResult.setOptimizationDurationMillis(System.currentTimeMillis() - startTime);
 
             log.info("\tRunning TS");
+            startTime = System.currentTimeMillis();
             OptimizerResult tsResult = tabuSearchOptimizer.run(false, plane, generatedPassengers, path,
                     500, 10, 20);
+            tsResult.setOptimizationDurationMillis(System.currentTimeMillis() - startTime);
 
             List<OptimizerResult> results = List.of(
                     aileMiddleWindowResult,

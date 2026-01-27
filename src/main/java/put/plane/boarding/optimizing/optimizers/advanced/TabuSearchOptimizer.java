@@ -56,6 +56,7 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
         long startTime = System.currentTimeMillis();
         long MAX_TIME_MS = 150_000;
 
+        int totalCallToSimulator = 0;
 
         while (iteration < maxIterations && !shouldStop(startTime, MAX_TIME_MS, iteration, maxIterations)) {
             // Generate neighborhood
@@ -70,6 +71,7 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
 
 
                 int neighborEnergy = evaluateFitness(plane, neighbor, generatedPassengers);
+                totalCallToSimulator++;
 
                 neighbors.add(new NeighborSolution(neighbor, neighborEnergy));
             }
@@ -143,6 +145,7 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
 
                 currentSolution = generateRandomSolution(totalPassengers, random);
                 currentEnergy = evaluateFitness(plane, currentSolution, generatedPassengers);
+                totalCallToSimulator++;
                 tabuList.clear(); // Clear tabu list on restart
                 iterationsWithoutImprovement = 0;
             }
@@ -163,14 +166,14 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
         }
 
         return runOptimization(plane, logs, path, "TabuSearch",
-                "Tabu Search Optimization", bestSolution, generatedPassengers, false);
+                "Tabu Search Optimization", bestSolution, generatedPassengers, false, totalCallToSimulator);
     }
 
 
     @Override
     public OptimizerResult runOptimization(Plane plane, boolean logs, String path, String methodName, String description,
                                             List<List<Integer>> allGroups, List<Passenger> generatedPassengers,
-                                            boolean saveVisualization) {
+                                            boolean saveVisualization, int iterationCount) {
         List<List<Passenger>> mappedPassengers = allGroups
             .stream()
             .map(passengers -> passengers
@@ -216,7 +219,7 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
             .flatMap(List::stream)
             .collect(Collectors.toList());
 
-        return new OptimizerResult(methodName, time, flattenedSolution, allGroups, waitCountPerPassenger);
+        return new OptimizerResult(methodName, time, flattenedSolution, allGroups, waitCountPerPassenger, iterationCount);
     }
 
 

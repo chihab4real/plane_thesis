@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import put.plane.boarding.optimizing.OptimizerResult;
 import put.plane.boarding.passengers.generator.Passenger;
+import put.plane.boarding.optimizing.OptimizerResult;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -31,16 +32,18 @@ public class CSVService {
                     StandardOpenOption.APPEND)) {
 
                 if (!fileExists) {
-                    writer.write("flightID,methodName,totalDeplaningTime,numberOfGroups");
+                    writer.write("flightID,methodName,totalDeplaningTime,numberOfGroups,totalCallsToSimulator,optimizationDurationMillis");
                     writer.newLine();
                 }
 
                 for (OptimizerResult result : results) {
-                    String line = String.format("%s,%s,%d,%d",
+                    String line = String.format("%s,%s,%d,%d,%d,%d",
                             flightId,
-                            escapeCSV(result.methodName()),
-                            result.bestTime(),
-                            result.passengerGroups().size()
+                            escapeCSV(result.getMethodName()),
+                            result.getBestTime(),
+                            result.getPassengerGroups().size(),
+                            result.getTotalCallsToSimulator(),
+                            result.getOptimizationDurationMillis()
                     );
 
                     writer.write(line);
@@ -65,7 +68,7 @@ public class CSVService {
         StringBuilder methodsHeader = new StringBuilder();
         for (int i = 0; i < optimizerResults.size(); i++) {
             if (i > 0) methodsHeader.append(",");
-            String name = optimizerResults.get(i).methodName();
+            String name = optimizerResults.get(i).getMethodName();
             methodsHeader.append(name).append("Group")
                     .append(",")
                     .append(name).append("OrderInGroup")
@@ -79,7 +82,7 @@ public class CSVService {
         for (OptimizerResult result : optimizerResults) {
             Map<Integer, Integer> lookup = new HashMap<>();
             Map<Integer, Integer> orderLookup = new HashMap<>();
-            List<List<Integer>> groups = result.passengerGroups();
+            List<List<Integer>> groups = result.getPassengerGroups();
             for (int g = 0; g < groups.size(); g++) {
                 List<Integer> group = groups.get(g);
                 for (int order = 0; order < group.size(); order++) {
@@ -131,7 +134,7 @@ public class CSVService {
 
                         Integer gNum = groupLookup.getOrDefault(i, 0); // 0 if passenger wasn't in a group
                         Integer orderInGroup = orderLookup.getOrDefault(i, 0);
-                        Long waitCount = result.waitCountPerPassenger().getOrDefault(i, 0L);
+                        Long waitCount = result.getWaitCountPerPassenger().getOrDefault(i, 0L);
 
                         line.append(",").append(gNum)
                             .append(",").append(orderInGroup)

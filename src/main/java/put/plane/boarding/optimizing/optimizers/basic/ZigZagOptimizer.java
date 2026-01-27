@@ -63,7 +63,7 @@ public class ZigZagOptimizer extends Optimizer {
 
         return runOptimization(plane, logs, path, "Zigzag",
                 "Zigzag Optimization (Iterative alternating sides)", allGroups,
-                generatedPassengers, false);
+                generatedPassengers, false, 1);
     }
 
 

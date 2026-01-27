@@ -24,6 +24,7 @@ public class SimulatedAnnealingOptimizer extends AdvancedOptimizer {
                                int maxIterations) {
         int totalPassengers = generatedPassengers.size();
 
+        int totalCallsToSimulator = 0;
         if (logs) {
             log.info("Starting Simulated Annealing with {} passengers", totalPassengers);
             log.info("Initial temp: {}, Cooling rate: {}, Max iterations: {}", initialTemp, coolingRate, maxIterations);
@@ -63,6 +64,7 @@ public class SimulatedAnnealingOptimizer extends AdvancedOptimizer {
 
             // Evaluate neighbor
             int neighborEnergy = evaluateFitness(plane, neighbor, generatedPassengers);
+            totalCallsToSimulator++;
 
             // Calculate energy difference (lower is better)
             int deltaE = neighborEnergy - currentEnergy;
@@ -118,7 +120,7 @@ public class SimulatedAnnealingOptimizer extends AdvancedOptimizer {
 
         // Save visualization for best solution
         return runOptimization(plane, logs, path, "SimulatedAnnealing",
-                "Simulated Annealing Optimization", bestSolution, generatedPassengers, false);
+                "Simulated Annealing Optimization", bestSolution, generatedPassengers, false, totalCallsToSimulator);
     }
 
 }

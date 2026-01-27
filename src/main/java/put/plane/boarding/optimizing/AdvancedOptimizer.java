@@ -23,7 +23,7 @@ public class AdvancedOptimizer extends Optimizer {
     @Override
     public OptimizerResult runOptimization(Plane plane, boolean logs, String path, String methodName, String description,
                                            List<List<Integer>> allGroups, List<Passenger> generatedPassengers,
-                                           boolean saveVisualization) {
+                                           boolean saveVisualization, int totalCallsToSimulator) {
         List<List<Passenger>> mappedPassengers = allGroups
             .stream()
             .map(passengers -> passengers
@@ -64,7 +64,7 @@ public class AdvancedOptimizer extends Optimizer {
             .flatMap(List::stream)
             .collect(Collectors.toList());
 
-        return new OptimizerResult(methodName, time, flattenedSolution, allGroups, waitCountPerPassenger);
+        return new OptimizerResult(methodName, time, flattenedSolution, allGroups, waitCountPerPassenger, totalCallsToSimulator);
     }
 
     @Override

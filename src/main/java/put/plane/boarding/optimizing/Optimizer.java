@@ -38,7 +38,7 @@ public abstract class Optimizer {
 
     public OptimizerResult runOptimization(Plane plane, boolean logs, String path, String methodName, String description,
                                            List<List<Integer>> allGroups, List<Passenger> generatedPassengers,
-                                           boolean saveVisualization) {
+                                           boolean saveVisualization, int iterationCount) {
         List<List<Passenger>> mappedPassengers = allGroups
                 .stream()
                 .map(passengers -> passengers
@@ -73,7 +73,7 @@ public abstract class Optimizer {
             }
         }
 
-        return new OptimizerResult(methodName, simulatorResponse.time(), new ArrayList<>(), allGroups, waitCountPerPassenger);
+        return new OptimizerResult(methodName, simulatorResponse.time(), new ArrayList<>(), allGroups, waitCountPerPassenger, iterationCount);
     }
 
     public SimulatorResponse getTimeForOrder(Plane plane, List<List<Passenger>> passengers, String path, String methodName, boolean saveVisualization) {

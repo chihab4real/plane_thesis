@@ -23,6 +23,8 @@ public class GeneticAlgorithmOptimizer extends AdvancedOptimizer {
     public OptimizerResult run(boolean logs, Plane plane, List<Passenger> generatedPassengers,String path, int populationSize, int generations, double mutationRate, double crossoverRate) {
         int totalPassengers = generatedPassengers.size();
 
+        int totalCallsToSimulator = 0;
+        int whichIterationBestWasFound = -1;
         if (logs) {
             log.info("Starting GA with {} passengers", totalPassengers);
         }
@@ -32,7 +34,7 @@ public class GeneticAlgorithmOptimizer extends AdvancedOptimizer {
         for (List<List<Integer>> individual : population) {
             if (!isValidIndividual(individual, totalPassengers)) {
 //                log.error("Invalid individual in initial population!");
-                return new OptimizerResult("", Integer.MAX_VALUE, new ArrayList<>(), new ArrayList<>(), new java.util.HashMap<>());
+                return new OptimizerResult("", Integer.MAX_VALUE, new ArrayList<>(), new ArrayList<>(), new java.util.HashMap<>(), totalCallsToSimulator, whichIterationBestWasFound);
             }
         }
 
@@ -49,10 +51,12 @@ public class GeneticAlgorithmOptimizer extends AdvancedOptimizer {
             List<IndividualFitness> evaluated = new ArrayList<>();
             for (List<List<Integer>> individual : population) {
                 int fitness = evaluateFitness(plane, individual, generatedPassengers);
+                totalCallsToSimulator++;
                 evaluated.add(new IndividualFitness(individual, fitness));
 
                 if (fitness < bestTime) {
                     bestTime = fitness;
+                    whichIterationBestWasFound = totalCallsToSimulator;
                     bestSolution = deepCopyIndices(individual);
                     if (logs) {
 //                        log.info("Gen {}: New best = {}", gen, bestTime);
@@ -98,12 +102,11 @@ public class GeneticAlgorithmOptimizer extends AdvancedOptimizer {
             if (logs && gen % 5 == 0) {
                 log.info("Gen {}/{} - Best so far: {}", gen, generations, bestTime);
             }
-            long genTime = System.currentTimeMillis() - genStart;
         }
 
         if (bestSolution == null) {
 //            log.error("No solution found!");
-            return new OptimizerResult("", Integer.MAX_VALUE, new ArrayList<>(), new ArrayList<>(), new java.util.HashMap<>());
+            return new OptimizerResult("", Integer.MAX_VALUE, new ArrayList<>(), new ArrayList<>(), new java.util.HashMap<>(), totalCallsToSimulator);
         }
 
         if (logs) {
@@ -113,7 +116,7 @@ public class GeneticAlgorithmOptimizer extends AdvancedOptimizer {
 
         // SAVE VISUALIZATION for the best solution only
         return runOptimization(plane, logs, path,"GeneticAlgorithm",
-                "Genetic Algorithm Optimization", bestSolution, generatedPassengers, false);
+                "Genetic Algorithm Optimization", bestSolution, generatedPassengers, false, generations);
     }
 
 
