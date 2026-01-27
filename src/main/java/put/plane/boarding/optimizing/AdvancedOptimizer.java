@@ -32,7 +32,7 @@ public class AdvancedOptimizer extends Optimizer {
                     .toList())
             .collect(Collectors.toCollection(ArrayList::new));
 
-        mappedPassengers = sortGroupsBySeatOrder(mappedPassengers, plane.getColumns());
+//        mappedPassengers = sortGroupsBySeatOrder(mappedPassengers, plane.getColumns());
 
         SimulatorResponse simulatorResponse = getTimeForOrder(plane, mappedPassengers, path, methodName, saveVisualization);
         int time = simulatorResponse.time();
@@ -204,17 +204,17 @@ public class AdvancedOptimizer extends Optimizer {
         // Choose random neighborhood operator
         double operationType = random.nextDouble();
 
-        if (operationType < 0.25 && neighbor.size() > 1) {
-            // 1. Merge two adjacent groups
+        if (operationType < 0.20 && neighbor.size() > 5) {
+            // Merge two adjacent groups
             int idx = random.nextInt(neighbor.size() - 1);
             neighbor.get(idx).addAll(neighbor.get(idx + 1));
             neighbor.remove(idx + 1);
-
-        } else if (operationType < 0.5 && !neighbor.isEmpty()) {
-            // 2. Split random group
+            // Split more aggressively
+        } else if (operationType < 0.50 && !neighbor.isEmpty()) {
+            // Split a random group
             int idx = random.nextInt(neighbor.size());
             List<Integer> group = neighbor.get(idx);
-            if (group.size() > 1) {
+            if (group.size() >= 2) {  // Can split
                 int splitPoint = 1 + random.nextInt(group.size() - 1);
                 List<Integer> newGroup = new ArrayList<>(group.subList(splitPoint, group.size()));
                 neighbor.set(idx, new ArrayList<>(group.subList(0, splitPoint)));
@@ -322,7 +322,6 @@ public class AdvancedOptimizer extends Optimizer {
         if (column < halfCols) return column; // Left side: closer to aisle = lower priority
         return totalColumns - column + 1; // Right side: closer to aisle = lower priority
     }
-
 
 
 
