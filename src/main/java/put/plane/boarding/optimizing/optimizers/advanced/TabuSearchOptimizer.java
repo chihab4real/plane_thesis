@@ -27,6 +27,7 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
 
     public OptimizerResult run(boolean logs, Plane plane, List<Passenger> generatedPassengers, String path, int maxIterations, int tabuTenure,
                                int neighborhoodSize) {
+        long start = System.currentTimeMillis();
         int totalPassengers = generatedPassengers.size();
 
         if (logs) {
@@ -58,6 +59,15 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
 
         int totalCallToSimulator = 0;
 
+
+
+// ADD THESE LINES HERE (after line 62):
+        List<Integer> fitnessHistory = new ArrayList<>();
+        List<Double> diversityHistory = new ArrayList<>();
+        int iterationOfBest = 0;
+        fitnessHistory.add(currentEnergy); // Track initial fitness
+
+
         while (iteration < maxIterations && !shouldStop(startTime, MAX_TIME_MS, iteration, maxIterations)) {
             // Generate neighborhood
             List<NeighborSolution> neighbors = new ArrayList<>();
@@ -74,7 +84,9 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
                 totalCallToSimulator++;
 
                 neighbors.add(new NeighborSolution(neighbor, neighborEnergy));
+
             }
+            fitnessHistory.add(currentEnergy);
 
             if (neighbors.isEmpty()) {
                 log.warn("No valid neighbors generated at iteration {}", iteration);
@@ -127,6 +139,7 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
                 bestSolution = deepCopyIndices(currentSolution);
                 bestEnergy = currentEnergy;
                 iterationsWithoutImprovement = 0;
+                iterationOfBest = iteration;
 
                 if (logs) {
                     log.info("Iter {}: New best = {} ticks ({} groups)",
@@ -152,6 +165,14 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
 
             iteration++;
 
+            final List<List<Integer>> finalCurrentSolution = currentSolution;
+            double diversity = neighbors.isEmpty() ? 0.0 :
+                    neighbors.stream()
+                            .mapToDouble(n -> calculateDistance(finalCurrentSolution, n.solution()))
+                            .average()
+                            .orElse(0.0);
+
+
             // Log progress
             if (logs && iteration % 50 == 0) {
                 log.info("Iter {}/{} - Best: {} ticks, Current: {} ticks, Tabu size: {}",
@@ -164,9 +185,15 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
             log.info("Best solution has {} groups", bestSolution.size());
             log.info("Running final simulation WITH visualization...");
         }
-
-        return runOptimization(plane, logs, path, "TabuSearch",
+        long optimizationDuration = System.currentTimeMillis() - start;
+        OptimizerResult result = runOptimization(plane, logs, path, "TabuSearch",
                 "Tabu Search Optimization", bestSolution, generatedPassengers, false, totalCallToSimulator);
+
+        result.setOptimizationDurationMillis(optimizationDuration);
+        result.setFitnessHistory(fitnessHistory);
+        result.setIterationOfBestSolution(iterationOfBest);
+        result.setDiversityHistory(diversityHistory);
+        return result;
     }
 
 
@@ -221,6 +248,23 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
 
         return new OptimizerResult(methodName, time, flattenedSolution, allGroups, waitCountPerPassenger, iterationCount);
     }
+
+    private double calculateDistance(List<List<Integer>> sol1, List<List<Integer>> sol2) {
+        List<Integer> flat1 = sol1.stream().flatMap(List::stream).collect(Collectors.toList());
+        List<Integer> flat2 = sol2.stream().flatMap(List::stream).collect(Collectors.toList());
+
+        int differences = 0;
+        int minSize = Math.min(flat1.size(), flat2.size());
+
+        for (int i = 0; i < minSize; i++) {
+            if (!flat1.get(i).equals(flat2.get(i))) {
+                differences++;
+            }
+        }
+
+        return minSize > 0 ? (double) differences / minSize : 0.0;
+    }
+
 
 
 

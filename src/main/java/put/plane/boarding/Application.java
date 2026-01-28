@@ -7,8 +7,7 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.stereotype.Service;
-import put.plane.boarding.optimizing.Optimizer;
-import put.plane.boarding.optimizing.OptimizerResult;
+import put.plane.boarding.optimizing.*;
 import put.plane.boarding.optimizing.optimizers.advanced.GeneticAlgorithmOptimizer;
 import put.plane.boarding.optimizing.optimizers.advanced.SimulatedAnnealingOptimizer;
 import put.plane.boarding.optimizing.optimizers.advanced.TabuSearchOptimizer;
@@ -25,6 +24,7 @@ import put.plane.boarding.simulator.simulator.frame.XMLService;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,6 +34,8 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.io.FileWriter;
+import java.io.IOException;
 
 @Slf4j
 @Service
@@ -69,6 +71,12 @@ public class Application {
     @Setter(onMethod_ = @Autowired)
     private ZigZagOptimizer zigZagOptimizer;
 
+    @Autowired
+    private MetricsCalculator metricsCalculator;
+
+    @Autowired
+    private MetricsCsvWriter metricsCsvWriter;
+
 
 
     public static void main(String[] args) {
@@ -80,7 +88,7 @@ public class Application {
 
     public void run() {
 
-        int startFlightIndex = 1;
+        int startFlightIndex = 3;
         int endFlightIndex = 5;
         List<Flight> allFlights = readFlightsDataCSV();
 
@@ -96,10 +104,12 @@ public class Application {
             Plane plane = planeFactory.create(flight.getPlaneRows(), flight.getPlaneColumns(), flight.isDoubleExit());
             List<Passenger> generatedPassengers = flight.getPassengers();
 
+
             log.info("\tRunning AMW");
             startTime = System.currentTimeMillis();
             OptimizerResult aileMiddleWindowResult = aisleMiddleWindowOptimizer.run(plane, generatedPassengers, path, false);
             aileMiddleWindowResult.setOptimizationDurationMillis(System.currentTimeMillis() - startTime);
+
 
             log.info("\tRunning FB");
             rowBasedOptimizer.setFrontToBack(true);
@@ -117,7 +127,7 @@ public class Application {
             startTime = System.currentTimeMillis();
             OptimizerResult zigZagResult = zigZagOptimizer.run(plane, generatedPassengers, path, false);
             zigZagResult.setOptimizationDurationMillis(System.currentTimeMillis() - startTime);
-
+//
             log.info("\tRunning GA");
             startTime = System.currentTimeMillis();
             OptimizerResult gaResult = geneticAlgorithmOptimizer.run(false, plane, generatedPassengers, path,
@@ -137,6 +147,9 @@ public class Application {
                     500, 10, 20);
             tsResult.setOptimizationDurationMillis(System.currentTimeMillis() - startTime);
 
+
+
+
             List<OptimizerResult> results = List.of(
                     aileMiddleWindowResult,
                     frontToBackResult,
@@ -146,9 +159,23 @@ public class Application {
                     saResult,
                     tsResult
             );
+            List<FlightMetrics> allMetrics = new ArrayList<>();
+
+            for (OptimizerResult result : results) {
+                FlightMetrics metrics = metricsCalculator.calculateMetrics(result, flight.getFlightNumber());
+                allMetrics.add(metrics);
+            }
+
+
+            String detailedMetricsPath = path + "/detailed_metrics.csv";
+            metricsCsvWriter.writeMetricsToCsv(allMetrics, detailedMetricsPath);
 
             csvService.appendOptimizationResultsToCSV(generatedPassengers,results, path, "optimization_summary.csv", flight.getFlightNumber());
             csvService.appendOptimizationSummary(results, path, "overall_summary.csv", flight.getFlightNumber());
+
+
+
+
         }
 
     }
@@ -253,5 +280,10 @@ public class Application {
         }
         return splitFlights;
     }
+
+
+
+
+
 
 }

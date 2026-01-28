@@ -1,5 +1,6 @@
 package put.plane.boarding.optimizing;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -12,6 +13,11 @@ public class OptimizerResult{
     int totalCallsToSimulator;
     long optimizationDurationMillis;
 
+    // NEW: Track fitness evolution
+    List<Integer> fitnessHistory;      // All evaluated fitness values
+    int iterationOfBestSolution;       // When best was found
+    List<Double> diversityHistory;
+
     public OptimizerResult(String methodName, int bestTime, List<Integer> bestSolution, List<List<Integer>> passengerGroups, Map<Integer, Long> waitCountPerPassenger, int totalCallsToSimulator, long optimizationDurationMillis) {
         this.methodName = methodName;
         this.bestTime = bestTime;
@@ -20,6 +26,8 @@ public class OptimizerResult{
         this.waitCountPerPassenger = waitCountPerPassenger;
         this.totalCallsToSimulator = totalCallsToSimulator;
         this.optimizationDurationMillis = optimizationDurationMillis;
+        this.fitnessHistory = new ArrayList<>();
+        this.diversityHistory = new ArrayList<>();
     }
 
     public OptimizerResult(String methodName, int bestTime, List<Integer> bestSolution, List<List<Integer>> passengerGroups, Map<Integer, Long> waitCountPerPassenger, int totalCallsToSimulator) {
@@ -86,5 +94,14 @@ public class OptimizerResult{
     public void setOptimizationDurationMillis(long optimizationDurationMillis) {
         this.optimizationDurationMillis = optimizationDurationMillis;
     }
+    public List<Integer> getFitnessHistory() { return fitnessHistory; }
+    public void setFitnessHistory(List<Integer> fitnessHistory) { this.fitnessHistory = fitnessHistory; }
+
+    public int getIterationOfBestSolution() { return iterationOfBestSolution; }
+    public void setIterationOfBestSolution(int iteration) { this.iterationOfBestSolution = iteration; }
+
+    public List<Double> getDiversityHistory() { return diversityHistory; }
+    public void setDiversityHistory(List<Double> diversityHistory) { this.diversityHistory = diversityHistory; }
+
 
 }

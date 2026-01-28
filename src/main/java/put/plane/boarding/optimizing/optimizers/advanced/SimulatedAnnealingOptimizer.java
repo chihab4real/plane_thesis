@@ -22,6 +22,7 @@ public class SimulatedAnnealingOptimizer extends AdvancedOptimizer {
 
     public OptimizerResult run(boolean logs, Plane plane, List<Passenger> generatedPassengers,String path, double initialTemp, double coolingRate,
                                int maxIterations) {
+        long start = System.currentTimeMillis();
         int totalPassengers = generatedPassengers.size();
 
         int totalCallsToSimulator = 0;
@@ -47,6 +48,10 @@ public class SimulatedAnnealingOptimizer extends AdvancedOptimizer {
             log.info("Initial solution: {} ticks, {} groups", currentEnergy, currentSolution.size());
         }
 
+        List<Integer> fitnessHistory = new ArrayList<>();
+        fitnessHistory.add(currentEnergy);
+        int iterationOfBest = 0;
+
         long startTime = System.currentTimeMillis();
         long MAX_TIME_MS = 150_000;
 
@@ -64,6 +69,7 @@ public class SimulatedAnnealingOptimizer extends AdvancedOptimizer {
 
             // Evaluate neighbor
             int neighborEnergy = evaluateFitness(plane, neighbor, generatedPassengers);
+            fitnessHistory.add(neighborEnergy);
             totalCallsToSimulator++;
 
             // Calculate energy difference (lower is better)
@@ -89,6 +95,7 @@ public class SimulatedAnnealingOptimizer extends AdvancedOptimizer {
                 if (neighborEnergy < bestEnergy) {
                     bestSolution = deepCopyIndices(neighbor);
                     bestEnergy = neighborEnergy;
+                    iterationOfBest = iteration;
 
                     if (logs) {
                         log.info("Iter {}: New best = {} ticks (temp: {:.2f})", iteration, bestEnergy, temperature);
@@ -118,9 +125,18 @@ public class SimulatedAnnealingOptimizer extends AdvancedOptimizer {
             log.info("Running final simulation WITH visualization...");
         }
 
-        // Save visualization for best solution
-        return runOptimization(plane, logs, path, "SimulatedAnnealing",
+        long optimizationDuration = System.currentTimeMillis() - start;
+
+        OptimizerResult result = runOptimization(plane, logs, path, "SimulatedAnnealing",
                 "Simulated Annealing Optimization", bestSolution, generatedPassengers, false, totalCallsToSimulator);
+
+        result.setOptimizationDurationMillis(optimizationDuration);
+        result.setFitnessHistory(fitnessHistory);
+        result.setIterationOfBestSolution(iterationOfBest);
+        result.setDiversityHistory(new ArrayList<>());
+
+        // Save visualization for best solution
+        return result;
     }
 
 }
