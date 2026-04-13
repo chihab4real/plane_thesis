@@ -1,25 +1,25 @@
-# Aircraft Boarding Optimization
+# Aircraft Deplaining Optimization
 
-This repository contains the source code and documentation for my thesis project: **Optimization of Aircraft Boarding Strategies using Heuristic and Metaheuristic Algorithms**.
+This repository contains the source code and documentation for my thesis project: **Optimization of Aircraft Deplaining Strategies using Heuristic and Metaheuristic Algorithms**.
 
 ## Project Overview
-This project analyzes and implements various aircraft boarding strategies to find optimal sequences that minimize total boarding time. It explores a range of methods, from common heuristics like "Front-to-Back" to advanced metaheuristic optimizers like Genetic Algorithms, Simulated Annealing, and Tabu Search. The primary goal is to reduce passenger interference and aisle congestion, leading to faster and more efficient boarding.
+This project analyzes and implements various aircraft deplaning strategies to find optimal sequences that minimize total deplaining time. It explores a range of methods, from common heuristics like "Front-to-Back" to advanced metaheuristic optimizers like Genetic Algorithms, Simulated Annealing, and Tabu Search. The primary goal is to reduce passenger interference and aisle congestion, leading to faster and more efficient deplaning.
 
 ## Features
-* **Heuristic Strategies:** Implements and compares standard boarding methods including `Front-to-Back`, `Back-to-Front`, `Aisle-Middle-Window`, and `Zigzag`.
-* **Advanced Metaheuristics:** Provides advanced optimization using `Genetic Algorithm`, `Simulated Annealing`, and `Tabu Search` to discover near-optimal boarding sequences.
-* **Performance Simulation:** Includes a detailed simulator to evaluate and compare the boarding time for any given passenger sequence.
+* **Heuristic Strategies:** Implements and compares standard deplaning methods including `Front-to-Back`, `Back-to-Front`, `Aisle-Middle-Window`, and `Zigzag`.
+* **Advanced Metaheuristics:** Provides advanced optimization using `Genetic Algorithm`, `Simulated Annealing`, and `Tabu Search` to discover near-optimal deplaning sequences.
+* **Performance Simulation:** Includes a detailed simulator to evaluate and compare the deplaning time for any given passenger sequence.
 * **Data Analysis & Export:** Generates detailed metrics and exports results to CSV for further analysis.
 
-## 🛠 Tech Stack
+## Tech Stack
 * **Language:** Java
 * **Build Tool:** Gradle
 * **Logging:** Logback
 
 ## Repository Structure
-* `src/main/java/put/plane/boarding/`: Main source code for the application, simulator, and optimizers.
-* `src/main/java/put/plane/boarding/optimizing/optimizers/basic/`: Implementation of basic heuristic strategies.
-* `src/main/java/put/plane/boarding/optimizing/optimizers/advanced/`: Implementation of metaheuristic algorithms.
+* `src/main/java/put/plane/deplaning/`: Main source code for the application, simulator, and optimizers.
+* `src/main/java/put/plane/deplaning/optimizing/optimizers/basic/`: Implementation of basic heuristic strategies.
+* `src/main/java/put/plane/deplaning/optimizing/optimizers/advanced/`: Implementation of metaheuristic algorithms.
 * `src/main/resources/`: Application configuration files.
 
 ## Installation & Usage
