@@ -1,45 +1,69 @@
-# Aircraft Deplaining Optimization
 
-This repository contains the source code and documentation for my thesis project: **Optimization of Aircraft Deplaining Strategies using Heuristic and Metaheuristic Algorithms**.
+---
 
-## Project Overview
-This project analyzes and implements various aircraft deplaning strategies to find optimal sequences that minimize total deplaining time. It explores a range of methods, from common heuristics like "Front-to-Back" to advanced metaheuristic optimizers like Genetic Algorithms, Simulated Annealing, and Tabu Search. The primary goal is to reduce passenger interference and aisle congestion, leading to faster and more efficient deplaning.
+# Aircraft Deplaning Optimization: A Microscopic Simulation Approach
 
-## Features
-* **Heuristic Strategies:** Implements and compares standard deplaning methods including `Front-to-Back`, `Back-to-Front`, `Aisle-Middle-Window`, and `Zigzag`.
-* **Advanced Metaheuristics:** Provides advanced optimization using `Genetic Algorithm`, `Simulated Annealing`, and `Tabu Search` to discover near-optimal deplaning sequences.
-* **Performance Simulation:** Includes a detailed simulator to evaluate and compare the deplaning time for any given passenger sequence.
-* **Data Analysis & Export:** Generates detailed metrics and exports results to CSV for further analysis.
+This repository contains the source code, simulation engine, and experimental data for the Bachelor's thesis **"AIRCRAFTS DEPLANING OPTIMIZATION"** (Poznań University of Technology, 2026)[cite: 7, 8, 12].
 
-## Tech Stack
-* **Language:** Java
-* **Build Tool:** Gradle
-* **Logging:** Logback
+## Overview
+Aircraft deplaning is a critical bottleneck in airport **Turnaround Time (TAT)**. This project utilizes a **Discrete-Event Simulation (DES)** built on **Cellular Automata** to model passenger movement, "Luggage Factors," and aisle interference.
 
-## Repository Structure
-* `src/main/java/put/plane/deplaning/`: Main source code for the application, simulator, and optimizers.
-* `src/main/java/put/plane/deplaning/optimizing/optimizers/basic/`: Implementation of basic heuristic strategies.
-* `src/main/java/put/plane/deplaning/optimizing/optimizers/advanced/`: Implementation of metaheuristic algorithms.
-* `src/main/resources/`: Application configuration files.
+### Key Finding: The Efficiency Paradox
+Our research tested 720 scenarios across various algorithms. Surprisingly, complex metaheuristics were outperformed by simple geometric rules:
+* **Zigzag Strategy:** Reduced deplaning time by **71.3%** compared to the industry-standard "Front-to-Back" method.
+* **Computational Efficiency:** The Zigzag rule is ~6,800x faster to calculate than Tabu Search while providing superior results.
 
-## Installation & Usage
+---
 
-1.  **Clone the repo:**
-    ```bash
-    git clone [https://github.com/patrickmolina1/plane_thesis.git](https://github.com/patrickmolina1/plane_thesis.git)
-    ```
-2.  **Navigate to the project directory:**
-    ```bash
-    cd plane_thesis
-    ```
-3.  **Build the project using Gradle:**
-    ```bash
-    ./gradlew build
-    ```
-4.  **Run the application:**
-    ```bash
-    ./gradlew run
-    ```
+## Technology Stack
+The project is built with a modular Java architecture to ensure scientific reproducibility[cite: 261, 272].
+* **Core:** Java 17+ (JDK) 
+* **Build System:** Gradle 
+* **Framework:** Spring (Inversion of Control for scenario injection) 
+* **Visualization:** JavaFX (Standalone MVC-based playback tool) 
+* **Utilities:** Project Lombok, Google Guava, Jackson/JAXB 
 
-## Running Experiments
-The main application logic is located in `Application.java`. You can configure which optimizers to run and their parameters within the `AppConfig.java` file. The results of the simulations will be saved in the `results` directory.
+---
+
+## Implemented Algorithms
+The framework compares two tiers of deplaning strategies:
+
+### 1. Deterministic Heuristics (Rule-Based)
+* **Front-to-Back (Baseline):** The standard, sequential row-by-row release.
+* **Aisle-First (Reverse WilMA):** "Peels" the cabin from the aisle out to the windows.
+* **Zigzag (Reverse Steffen):** Interleaved row release to maximize parallel overhead bin access.
+
+### 2. Stochastic Metaheuristics (Search-Based)
+* **Genetic Algorithm (GA):** Evolves release sequences through crossover and mutation.
+* **Simulated Annealing (SA):** Uses probabilistic acceptance to escape local optima.
+* **Tabu Search (TS):** Uses memory-guided lists to prevent cycling during local searches.
+
+---
+
+## Experimental Results
+The simulation measured **Total Deplaning Time (TDT)** and **Average Wait Time**.
+
+| Method | Avg Time (ticks) | Improvement vs. Baseline |
+| :--- | :--- | :--- |
+| **Zigzag** | **516.7** | **+71.3%** |
+| Tabu Search | 585.8 | +67.5% |
+| Simulated Annealing | 1038.3 | +42.4% |
+| Front-to-Back | 1801.5 | 0.0% |
+
+
+
+### Insights on Luggage & Layout
+* **The "Window-Seat Penalty":** Passengers in middle-window seats (Rows 7-11) face the highest interference.
+* **Dual-Exit Impact:** Adding a rear exit "pops" the high-pressure bottleneck at the front and shifts it to a "stagnation point" at Row 16.
+* **Robustness:** The Zigzag strategy maintains a significant lead even at 100% luggage saturation.
+
+---
+
+## Getting Started
+1.  **Clone the repository:** `git clone [repo-url]`
+2.  **Build the project:** `./gradlew build`
+3.  **Run Simulation:** Use the `SimulatorService` to execute a deplaning scenario.
+4.  **Visualize:** Open the JavaFX tool to replay `.xml` frame data exported by the engine.
+
+
+---
