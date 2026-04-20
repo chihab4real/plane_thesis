@@ -6,13 +6,17 @@ import put.plane.boarding.optimizing.AdvancedOptimizer;
 import put.plane.boarding.optimizing.OptimizerResult;
 import put.plane.boarding.passengers.generator.Passenger;
 import put.plane.boarding.simulator.plane.Plane;
+import put.plane.boarding.simulator.plane.structure.Seat;
 import put.plane.boarding.simulator.plane.factory.PlaneFactory;
 import put.plane.boarding.simulator.simulator.Simulator;
+import put.plane.boarding.simulator.simulator.SimulatorResponse;
 import put.plane.boarding.simulator.simulator.frame.XMLService;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -23,6 +27,7 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
 
     public OptimizerResult run(boolean logs, Plane plane, List<Passenger> generatedPassengers, String path, int maxIterations, int tabuTenure,
                                int neighborhoodSize) {
+        long start = System.currentTimeMillis();
         int totalPassengers = generatedPassengers.size();
 
         if (logs) {
@@ -52,6 +57,16 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
         long startTime = System.currentTimeMillis();
         long MAX_TIME_MS = 150_000;
 
+        int totalCallToSimulator = 0;
+
+
+
+// ADD THESE LINES HERE (after line 62):
+        List<Integer> fitnessHistory = new ArrayList<>();
+        List<Double> diversityHistory = new ArrayList<>();
+        int iterationOfBest = 0;
+        fitnessHistory.add(currentEnergy); // Track initial fitness
+
 
         while (iteration < maxIterations && !shouldStop(startTime, MAX_TIME_MS, iteration, maxIterations)) {
             // Generate neighborhood
@@ -66,9 +81,12 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
 
 
                 int neighborEnergy = evaluateFitness(plane, neighbor, generatedPassengers);
+                totalCallToSimulator++;
 
                 neighbors.add(new NeighborSolution(neighbor, neighborEnergy));
+
             }
+            fitnessHistory.add(currentEnergy);
 
             if (neighbors.isEmpty()) {
                 log.warn("No valid neighbors generated at iteration {}", iteration);
@@ -121,6 +139,7 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
                 bestSolution = deepCopyIndices(currentSolution);
                 bestEnergy = currentEnergy;
                 iterationsWithoutImprovement = 0;
+                iterationOfBest = iteration;
 
                 if (logs) {
                     log.info("Iter {}: New best = {} ticks ({} groups)",
@@ -139,11 +158,20 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
 
                 currentSolution = generateRandomSolution(totalPassengers, random);
                 currentEnergy = evaluateFitness(plane, currentSolution, generatedPassengers);
+                totalCallToSimulator++;
                 tabuList.clear(); // Clear tabu list on restart
                 iterationsWithoutImprovement = 0;
             }
 
             iteration++;
+
+            final List<List<Integer>> finalCurrentSolution = currentSolution;
+            double diversity = neighbors.isEmpty() ? 0.0 :
+                    neighbors.stream()
+                            .mapToDouble(n -> calculateDistance(finalCurrentSolution, n.solution()))
+                            .average()
+                            .orElse(0.0);
+
 
             // Log progress
             if (logs && iteration % 50 == 0) {
@@ -157,16 +185,22 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
             log.info("Best solution has {} groups", bestSolution.size());
             log.info("Running final simulation WITH visualization...");
         }
+        long optimizationDuration = System.currentTimeMillis() - start;
+        OptimizerResult result = runOptimization(plane, logs, path, "TabuSearch",
+                "Tabu Search Optimization", bestSolution, generatedPassengers, false, totalCallToSimulator);
 
-        return runOptimization(plane, logs, path, "TabuSearch",
-                "Tabu Search Optimization", bestSolution, generatedPassengers, false);
+        result.setOptimizationDurationMillis(optimizationDuration);
+        result.setFitnessHistory(fitnessHistory);
+        result.setIterationOfBestSolution(iterationOfBest);
+        result.setDiversityHistory(diversityHistory);
+        return result;
     }
 
 
     @Override
     public OptimizerResult runOptimization(Plane plane, boolean logs, String path, String methodName, String description,
                                             List<List<Integer>> allGroups, List<Passenger> generatedPassengers,
-                                            boolean saveVisualization) {
+                                            boolean saveVisualization, int iterationCount) {
         List<List<Passenger>> mappedPassengers = allGroups
             .stream()
             .map(passengers -> passengers
@@ -182,7 +216,23 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
             Collections.reverse(mappedPassengers);
         }
 
-        int time = getTimeForOrder(plane, mappedPassengers, path, methodName, saveVisualization);
+        SimulatorResponse simulatorResponse = getTimeForOrder(plane, mappedPassengers, path, methodName, saveVisualization);
+        int time = simulatorResponse.time();
+
+        // Map wait count from Seat to passenger index
+        Map<Integer, Long> waitCountPerPassenger = new HashMap<>();
+        for (int i = 0; i < generatedPassengers.size(); i++) {
+            Passenger p = generatedPassengers.get(i);
+            String seatLocation = p.getSeatLocation();
+            String[] parts = seatLocation.split("_");
+            int row = Integer.parseInt(parts[0]) - 1;
+            int fileIndex = Integer.parseInt(parts[1]) - 1;
+            Seat seat = new Seat(row, plane.getFiles().get(fileIndex));
+            Long waitTime = simulatorResponse.waitCount().get(seat);
+            if (waitTime != null) {
+                waitCountPerPassenger.put(i, waitTime);
+            }
+        }
 
         if (logs) {
             log.info(description);
@@ -196,8 +246,25 @@ public class TabuSearchOptimizer extends AdvancedOptimizer {
             .flatMap(List::stream)
             .collect(Collectors.toList());
 
-        return new OptimizerResult(methodName, time, flattenedSolution, allGroups);
+        return new OptimizerResult(methodName, time, flattenedSolution, allGroups, waitCountPerPassenger, iterationCount);
     }
+
+    private double calculateDistance(List<List<Integer>> sol1, List<List<Integer>> sol2) {
+        List<Integer> flat1 = sol1.stream().flatMap(List::stream).collect(Collectors.toList());
+        List<Integer> flat2 = sol2.stream().flatMap(List::stream).collect(Collectors.toList());
+
+        int differences = 0;
+        int minSize = Math.min(flat1.size(), flat2.size());
+
+        for (int i = 0; i < minSize; i++) {
+            if (!flat1.get(i).equals(flat2.get(i))) {
+                differences++;
+            }
+        }
+
+        return minSize > 0 ? (double) differences / minSize : 0.0;
+    }
+
 
 
 

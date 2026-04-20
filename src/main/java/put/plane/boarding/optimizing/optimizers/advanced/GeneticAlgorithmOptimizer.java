@@ -20,9 +20,14 @@ import java.util.stream.Collectors;
 @Service
 public class GeneticAlgorithmOptimizer extends AdvancedOptimizer {
 
-    public OptimizerResult run(boolean logs, Plane plane, List<Passenger> generatedPassengers,String path, int populationSize, int generations, double mutationRate, double crossoverRate) {
+    public OptimizerResult run(boolean logs, Plane plane, List<Passenger> generatedPassengers, String path,
+                               int populationSize, int generations, double mutationRate, double crossoverRate) {
+
+        long start = System.currentTimeMillis();
         int totalPassengers = generatedPassengers.size();
 
+        int totalCallsToSimulator = 0;
+        int whichIterationBestWasFound = -1;
         if (logs) {
             log.info("Starting GA with {} passengers", totalPassengers);
         }
@@ -31,37 +36,43 @@ public class GeneticAlgorithmOptimizer extends AdvancedOptimizer {
 
         for (List<List<Integer>> individual : population) {
             if (!isValidIndividual(individual, totalPassengers)) {
-//                log.error("Invalid individual in initial population!");
-                return new OptimizerResult("", Integer.MAX_VALUE, new ArrayList<>(), new ArrayList<>());
+                return new OptimizerResult("", Integer.MAX_VALUE, new ArrayList<>(), new ArrayList<>(), new java.util.HashMap<>(), totalCallsToSimulator, whichIterationBestWasFound);
             }
         }
 
         int bestTime = Integer.MAX_VALUE;
         List<List<Integer>> bestSolution = null;
 
+
+        List<Integer> fitnessHistory = new ArrayList<>();
+        List<Double> diversityHistory = new ArrayList<>();
+        int iterationOfBest = 0;
+        fitnessHistory.add(bestTime);
+
+
         long startTime = System.currentTimeMillis();
         long MAX_TIME_MS = 150_000;
 
-        for (int gen = 0; gen < generations  && !shouldStop(startTime, MAX_TIME_MS, gen, generations); gen++) {
+        for (int gen = 0; gen < generations && !shouldStop(startTime, MAX_TIME_MS, gen, generations); gen++) {
             long genStart = System.currentTimeMillis();
-            //log.info("Starting generation {}/{}", gen, generations);
 
             List<IndividualFitness> evaluated = new ArrayList<>();
             for (List<List<Integer>> individual : population) {
                 int fitness = evaluateFitness(plane, individual, generatedPassengers);
+                totalCallsToSimulator++;
                 evaluated.add(new IndividualFitness(individual, fitness));
 
                 if (fitness < bestTime) {
                     bestTime = fitness;
+                    whichIterationBestWasFound = totalCallsToSimulator;
                     bestSolution = deepCopyIndices(individual);
-                    if (logs) {
-//                        log.info("Gen {}: New best = {}", gen, bestTime);
-                    }
+                    iterationOfBest = gen;
                 }
+
             }
+            fitnessHistory.add(bestTime);
 
             if (evaluated.isEmpty()) {
-//                log.error("No valid individuals in generation {}", gen);
                 break;
             }
 
@@ -95,25 +106,33 @@ public class GeneticAlgorithmOptimizer extends AdvancedOptimizer {
 
             population = newPopulation;
 
+            double diversity = calculatePopulationDiversity(evaluated);
+            diversityHistory.add(diversity);
+
             if (logs && gen % 5 == 0) {
                 log.info("Gen {}/{} - Best so far: {}", gen, generations, bestTime);
             }
-            long genTime = System.currentTimeMillis() - genStart;
         }
 
         if (bestSolution == null) {
-//            log.error("No solution found!");
-            return new OptimizerResult("", Integer.MAX_VALUE, new ArrayList<>(), new ArrayList<>());
+            return new OptimizerResult("", Integer.MAX_VALUE, new ArrayList<>(), new ArrayList<>(), new java.util.HashMap<>(), totalCallsToSimulator);
         }
 
         if (logs) {
             log.info("GA completed. Best time: {}", bestTime);
             log.info("Running final simulation WITH visualization...");
         }
+        long optimizationDuration = System.currentTimeMillis() - start;
 
-        // SAVE VISUALIZATION for the best solution only
-        return runOptimization(plane, logs, path,"GeneticAlgorithm",
-                "Genetic Algorithm Optimization", bestSolution, generatedPassengers, false);
+        OptimizerResult result = runOptimization(plane, logs, path, "GeneticAlgorithm",
+                "Genetic Algorithm Optimization", bestSolution, generatedPassengers, false, totalCallsToSimulator);
+
+        result.setOptimizationDurationMillis(optimizationDuration);
+        result.setFitnessHistory(fitnessHistory);
+        result.setIterationOfBestSolution(iterationOfBest);
+        result.setDiversityHistory(diversityHistory);
+
+        return result;
     }
 
 
@@ -223,6 +242,42 @@ public class GeneticAlgorithmOptimizer extends AdvancedOptimizer {
             Collections.reverse(individual.subList(start, end + 1));
         }
     }
+
+    private double calculatePopulationDiversity(List<IndividualFitness> population) {
+        if (population.size() < 2) return 0.0;
+
+        double sumDistances = 0.0;
+        int comparisons = 0;
+
+        for (int i = 0; i < Math.min(10, population.size()); i++) {
+            for (int j = i + 1; j < Math.min(10, population.size()); j++) {
+                sumDistances += calculateHammingDistance(
+                        population.get(i).individual(),
+                        population.get(j).individual()
+                );
+                comparisons++;
+            }
+        }
+
+        return comparisons > 0 ? sumDistances / comparisons : 0.0;
+    }
+
+    private double calculateHammingDistance(List<List<Integer>> sol1, List<List<Integer>> sol2) {
+        List<Integer> flat1 = sol1.stream().flatMap(List::stream).collect(Collectors.toList());
+        List<Integer> flat2 = sol2.stream().flatMap(List::stream).collect(Collectors.toList());
+
+        int differences = 0;
+        int minSize = Math.min(flat1.size(), flat2.size());
+
+        for (int i = 0; i < minSize; i++) {
+            if (!flat1.get(i).equals(flat2.get(i))) {
+                differences++;
+            }
+        }
+
+        return minSize > 0 ? (double) differences / minSize : 0.0;
+    }
+
 
 
 

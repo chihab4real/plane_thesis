@@ -3,6 +3,7 @@ package put.plane.boarding.optimizing;
 import lombok.extern.slf4j.Slf4j;
 import put.plane.boarding.passengers.generator.Passenger;
 import put.plane.boarding.simulator.plane.Plane;
+import put.plane.boarding.simulator.plane.structure.Seat;
 import put.plane.boarding.simulator.plane.factory.PlaneFactory;
 import put.plane.boarding.simulator.problem.DeplainingProblem;
 import put.plane.boarding.simulator.problem.PassengerGroup;
@@ -22,7 +23,8 @@ public class AdvancedOptimizer extends Optimizer {
     @Override
     public OptimizerResult runOptimization(Plane plane, boolean logs, String path, String methodName, String description,
                                            List<List<Integer>> allGroups, List<Passenger> generatedPassengers,
-                                           boolean saveVisualization) {
+                                           boolean saveVisualization, int totalCallsToSimulator) {
+        long startTime = System.currentTimeMillis();
         List<List<Passenger>> mappedPassengers = allGroups
             .stream()
             .map(passengers -> passengers
@@ -31,9 +33,25 @@ public class AdvancedOptimizer extends Optimizer {
                     .toList())
             .collect(Collectors.toCollection(ArrayList::new));
 
-        mappedPassengers = sortGroupsBySeatOrder(mappedPassengers, plane.getColumns());
+//        mappedPassengers = sortGroupsBySeatOrder(mappedPassengers, plane.getColumns());
 
-        int time = getTimeForOrder(plane, mappedPassengers, path, methodName, saveVisualization);
+        SimulatorResponse simulatorResponse = getTimeForOrder(plane, mappedPassengers, path, methodName, saveVisualization);
+        int time = simulatorResponse.time();
+
+        // Map wait count from Seat to passenger index
+        Map<Integer, Long> waitCountPerPassenger = new HashMap<>();
+        for (int i = 0; i < generatedPassengers.size(); i++) {
+            Passenger p = generatedPassengers.get(i);
+            String seatLocation = p.getSeatLocation();
+            String[] parts = seatLocation.split("_");
+            int row = Integer.parseInt(parts[0]) - 1;
+            int fileIndex = Integer.parseInt(parts[1]) - 1;
+            Seat seat = new Seat(row, plane.getFiles().get(fileIndex));
+            Long waitTime = simulatorResponse.waitCount().get(seat);
+            if (waitTime != null) {
+                waitCountPerPassenger.put(i, waitTime);
+            }
+        }
 
         if (logs) {
             log.info(description);
@@ -46,8 +64,8 @@ public class AdvancedOptimizer extends Optimizer {
         List<Integer> flattenedSolution = allGroups.stream()
             .flatMap(List::stream)
             .collect(Collectors.toList());
-
-        return new OptimizerResult(methodName, time, flattenedSolution, allGroups);
+        long duration = System.currentTimeMillis() - startTime;
+        return new OptimizerResult(methodName, time, flattenedSolution, allGroups, waitCountPerPassenger, totalCallsToSimulator, duration);
     }
 
     @Override
@@ -92,7 +110,7 @@ public class AdvancedOptimizer extends Optimizer {
         long startTime = System.currentTimeMillis();
 //        log.info("Starting simulation...");
 
-        int time = getTimeForOrder(plane, passengerGroups, null, null, false);
+        int time = getTimeForOrder(plane, passengerGroups, null, null, false).time();
 
         long elapsed = System.currentTimeMillis() - startTime;
 //        log.info("Simulation completed: {} ticks in {} ms", time, elapsed);
@@ -187,17 +205,17 @@ public class AdvancedOptimizer extends Optimizer {
         // Choose random neighborhood operator
         double operationType = random.nextDouble();
 
-        if (operationType < 0.25 && neighbor.size() > 1) {
-            // 1. Merge two adjacent groups
+        if (operationType < 0.20 && neighbor.size() > 5) {
+            // Merge two adjacent groups
             int idx = random.nextInt(neighbor.size() - 1);
             neighbor.get(idx).addAll(neighbor.get(idx + 1));
             neighbor.remove(idx + 1);
-
-        } else if (operationType < 0.5 && !neighbor.isEmpty()) {
-            // 2. Split random group
+            // Split more aggressively
+        } else if (operationType < 0.50 && !neighbor.isEmpty()) {
+            // Split a random group
             int idx = random.nextInt(neighbor.size());
             List<Integer> group = neighbor.get(idx);
-            if (group.size() > 1) {
+            if (group.size() >= 2) {  // Can split
                 int splitPoint = 1 + random.nextInt(group.size() - 1);
                 List<Integer> newGroup = new ArrayList<>(group.subList(splitPoint, group.size()));
                 neighbor.set(idx, new ArrayList<>(group.subList(0, splitPoint)));
@@ -305,7 +323,6 @@ public class AdvancedOptimizer extends Optimizer {
         if (column < halfCols) return column; // Left side: closer to aisle = lower priority
         return totalColumns - column + 1; // Right side: closer to aisle = lower priority
     }
-
 
 
 

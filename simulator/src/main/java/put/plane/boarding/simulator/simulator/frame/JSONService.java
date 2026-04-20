@@ -47,8 +47,8 @@ public class JSONService {
 
                 Map<String, Object> methodInfo = new LinkedHashMap<>();
                 methodInfo.put("methodName", methodName);
-                methodInfo.put("totalDeplaningTime", result.bestTime());
-                methodInfo.put("numberOfGroups", result.passengerGroups().size());
+                methodInfo.put("totalDeplaningTime", result.getBestTime());
+                methodInfo.put("numberOfGroups", result.getPassengerGroups().size());
 
                 methodsList.add(methodInfo);
             }
@@ -75,7 +75,7 @@ public class JSONService {
                     String methodName = entry.getKey();
                     OptimizerResult result = entry.getValue();
 
-                    int groupNumber = findPassengerGroup(passenger, passengers, result.passengerGroups());
+                    int groupNumber = findPassengerGroup(passenger, passengers, result.getPassengerGroups());
                     deplaningGroups.put(methodName, groupNumber);
                 }
                 passengerData.put("deplaningGroups", deplaningGroups);

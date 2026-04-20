@@ -16,6 +16,7 @@ public class AisleMiddleWindowOptimizer extends Optimizer {
 
     @Override
     public OptimizerResult run(Plane plane,List<Passenger> generatedPassengers, String path, boolean logs) {
+        long startTime = System.currentTimeMillis();
         int numColumns = plane.getColumns();
         int centerColumn = numColumns / 2;
 
@@ -50,7 +51,7 @@ public class AisleMiddleWindowOptimizer extends Optimizer {
 
         return runOptimization(plane, logs,path, "AisleMiddleWindow",
                 "aisleMiddleWindow Optimization", allGroups, generatedPassengers,
-                false);
+                false, 1);
     }
 
 }
